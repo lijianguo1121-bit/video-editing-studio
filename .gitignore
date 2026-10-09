@@ -1,0 +1,24 @@
+# ---- 产物与工作区（产物默认写在 ~/VideoStudio，这里兜底防误提交）----
+jobs/
+uploads/
+workspace/
+*.mov
+premix_*.wav
+frames/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ---- 系统 ----
+.DS_Store
+Thumbs.db
+*.log
+
+# ---- 编辑器 ----
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,1592 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>剪辑模板库 · 20 套</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:720px;height:1280px;background:transparent;overflow:hidden;}
+  #stage{
+    position:absolute;inset:0;width:720px;height:1280px;overflow:hidden;
+    font-family:"PingFang SC","Hiragino Sans GB","Heiti SC","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  #footage{position:absolute;inset:0;width:720px;height:1280px;object-fit:cover;display:none;}
+  body.preview #footage{display:block;}
+  .g-layer{position:absolute;inset:0;pointer-events:none;}
+
+  /* ---------------- shared beat atoms (skinned per template) --------------- */
+  .g-twrap{position:absolute;left:0;right:0;bottom:150px;height:400px;}
+  .g-tblock{position:absolute;left:0;right:0;bottom:0;text-align:center;visibility:hidden;opacity:0;}
+  .g-ttl{position:relative;display:inline-block;}
+  .g-in{display:inline-block;transform-origin:50% 50%;}
+  .g-tag,.g-sub,.g-en{display:block;}
+  .g-sub{transform-origin:50% 50%;}
+
+  /* =========================================================================
+     01 · CRT 复古数据终端
+     ========================================================================= */
+  #L_crt{font-family:"SF Mono",Menlo,Consolas,monospace;}
+  .crt-scan{
+    position:absolute;inset:-4px;
+    background:repeating-linear-gradient(180deg,
+      rgba(0,0,0,.30) 0px, rgba(0,0,0,.30) 1px, transparent 1px, transparent 4px);
+  }
+  .crt-vig{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(120% 80% at 50% 50%, transparent 42%, rgba(0,0,0,.72) 100%),
+      linear-gradient(180deg, rgba(4,16,9,.62), rgba(4,16,9,.34) 45%, rgba(4,16,9,.70));
+  }
+  .crt-tint{position:absolute;inset:0;background:rgba(18,58,34,.36);}
+  .crt-rule{position:absolute;left:0;right:0;height:2px;background:#39FF88;opacity:.55;
+    box-shadow:0 0 14px rgba(57,255,136,.9);}
+  .crt-corner{
+    position:absolute;font-size:20px;letter-spacing:2px;color:rgba(57,255,136,.92);
+    text-shadow:0 0 10px rgba(57,255,136,.85);
+  }
+  .crt-box{
+    display:inline-block;border:2px solid rgba(57,255,136,.85);
+    padding:24px 34px 22px;background:rgba(3,14,8,.55);
+    box-shadow:0 0 26px rgba(57,255,136,.28), inset 0 0 26px rgba(57,255,136,.10);
+  }
+  #L_crt .g-tag{font-size:20px;letter-spacing:4px;color:rgba(57,255,136,.75);margin-bottom:12px;}
+  #L_crt .g-ttl{font-size:70px;font-weight:700;letter-spacing:2px;color:#EAFFF2;
+    text-shadow:-1.6px 0 rgba(255,70,70,.55), 1.6px 0 rgba(70,190,255,.55), 0 0 18px rgba(57,255,136,.92);}
+  #L_crt .g-sub{margin-top:16px;font-size:26px;letter-spacing:2px;color:rgba(57,255,136,.92);}
+  .crt-caret{
+    display:inline-block;width:20px;height:34px;background:#39FF88;vertical-align:-4px;
+    margin-left:10px;box-shadow:0 0 14px rgba(57,255,136,.9);
+  }
+
+  /* =========================================================================
+     02 · 复古胶片双语
+     ========================================================================= */
+  #L_retro{font-family:"Songti SC","STSong",Georgia,serif;}
+  .rt-warm{position:absolute;inset:0;background:rgba(196,142,74,.26);}
+  .rt-grain{position:absolute;inset:-20px;width:calc(100% + 40px);height:calc(100% + 40px);
+    opacity:.16;mix-blend-mode:overlay;}
+  .rt-vig{position:absolute;inset:0;
+    background:radial-gradient(105% 68% at 50% 46%, transparent 38%, rgba(28,16,8,.82) 100%);}
+  .rt-bar{position:absolute;left:0;right:0;height:54px;background:rgba(12,9,6,.88);}
+  .rt-perf{position:absolute;top:90px;bottom:90px;width:26px;display:flex;flex-direction:column;
+    justify-content:space-around;align-items:center;}
+  .rt-perf i{display:block;width:15px;height:19px;border-radius:3px;background:rgba(12,9,6,.72);}
+  .rt-top{position:absolute;left:56px;right:56px;top:16px;display:flex;justify-content:space-between;
+    font-size:20px;letter-spacing:3px;color:rgba(242,228,206,.92);}
+  #L_retro .g-tag{font-size:19px;letter-spacing:6px;color:rgba(217,160,91,.98);margin-bottom:14px;}
+  #L_retro .g-ttl{font-size:72px;font-weight:600;letter-spacing:3px;color:#F7EEDD;
+    text-shadow:0 4px 18px rgba(20,10,4,.9);}
+  #L_retro .g-sub{margin-top:16px;font-size:26px;letter-spacing:4px;color:rgba(247,238,221,.92);}
+  #L_retro .g-en{margin-top:12px;font-size:19px;letter-spacing:7px;color:rgba(217,160,91,.95);}
+
+  /* =========================================================================
+     03 · 增长数据仪表盘
+     ========================================================================= */
+  #L_dash{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;}
+  .ds-veil{position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(6,18,32,.86), rgba(6,18,32,.34) 40%,
+      rgba(6,18,32,.42) 66%, rgba(6,18,32,.92) 100%);}
+  .ds-glass{
+    background:linear-gradient(158deg, rgba(16,44,68,.90), rgba(8,22,38,.94));
+    border:1.4px solid rgba(79,209,224,.42);border-radius:22px;
+    box-shadow:0 18px 44px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.08);
+    backdrop-filter:blur(6px);
+  }
+  .ds-top{position:absolute;left:36px;top:44px;display:flex;align-items:center;gap:12px;
+    padding:14px 26px;border-radius:999px;font-size:24px;font-weight:600;letter-spacing:2px;
+    color:#DFF6FF;background:rgba(8,24,40,.82);box-shadow:0 0 0 1.4px rgba(79,209,224,.45);}
+  .ds-top .dot{width:13px;height:13px;border-radius:50%;background:#4FD1E0;}
+  .ds-chart{position:absolute;left:36px;width:648px;top:938px;height:166px;padding:20px 24px 14px;}
+  .ds-chart .cap{font-size:20px;letter-spacing:3px;color:rgba(79,209,224,.95);}
+  .ds-chart svg{display:block;width:600px;height:104px;margin-top:8px;}
+  .ds-kpi{position:absolute;left:36px;right:36px;top:1108px;display:flex;gap:14px;}
+  .ds-kpi div{flex:1;padding:12px 16px 10px;}
+  .ds-kpi .l{font-size:18px;line-height:1.2;color:rgba(200,226,240,.78);letter-spacing:1px;}
+  .ds-kpi .v{font-family:"SF Mono",Menlo,monospace;font-size:34px;font-weight:700;color:#EAFBFF;
+    letter-spacing:1px;line-height:1.15;}
+  .ds-kpi .v small{font-size:19px;font-weight:600;color:rgba(79,209,224,.95);margin-left:3px;}
+  .ds-kpi .d{font-size:17px;line-height:1.2;color:#A8E063;font-family:"SF Mono",Menlo,monospace;}
+  .ds-ring{position:absolute;right:32px;top:44px;width:76px;height:76px;}
+  #L_dash .g-twrap{bottom:358px;height:300px;}
+  .ds-card{display:inline-block;padding:28px 36px 26px;border-radius:24px;text-align:center;
+    background:linear-gradient(158deg, rgba(16,44,68,.94), rgba(8,22,38,.96));
+    border:1.4px solid rgba(79,209,224,.5);
+    box-shadow:0 20px 48px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);}
+  #L_dash .g-tag{font-size:20px;letter-spacing:5px;color:rgba(79,209,224,.95);margin-bottom:12px;}
+  #L_dash .g-ttl{font-size:64px;font-weight:700;letter-spacing:2px;color:#EAFBFF;}
+  #L_dash .g-sub{margin-top:14px;font-size:24px;letter-spacing:2px;color:rgba(200,226,240,.78);}
+
+  /* =========================================================================
+     04 · 财经研报纪要
+     ========================================================================= */
+  #L_report{font-family:"Songti SC","STSong",Georgia,serif;}
+  .rp-paper{
+    position:absolute;left:30px;width:660px;top:736px;
+    background:rgba(250,249,244,.955);border-radius:6px;
+    box-shadow:0 22px 52px rgba(0,0,0,.46);padding:26px 30px 24px;
+  }
+  .rp-head{position:absolute;left:36px;right:36px;top:44px;
+    display:flex;justify-content:space-between;align-items:baseline;
+    font-size:21px;letter-spacing:3px;color:rgba(250,249,244,.94);}
+  .rp-head b{font-size:26px;letter-spacing:4px;}
+  .rp-kick{display:flex;justify-content:space-between;align-items:baseline;
+    border-bottom:2.5px solid #14263A;padding-bottom:9px;}
+  .rp-kick .n{font-size:29px;font-weight:700;letter-spacing:3px;color:#14263A;}
+  .rp-kick .m{font-family:"SF Mono",Menlo,monospace;font-size:18px;color:#6B7887;letter-spacing:2px;}
+  .rp-kick2{border-bottom:1px solid #C9CFD6;margin-top:5px;}
+  .rp-tbl{margin-top:18px;}
+  .rp-tr{display:flex;align-items:baseline;padding:11px 0;border-bottom:1px solid #E4E7EB;}
+  .rp-tr .c1{flex:1;font-size:23px;color:#3A4A5C;letter-spacing:2px;}
+  .rp-tr .c2{width:150px;text-align:right;font-family:"SF Mono",Menlo,monospace;
+    font-size:25px;font-weight:700;color:#14263A;}
+  .rp-tr .c3{width:110px;text-align:right;font-family:"SF Mono",Menlo,monospace;
+    font-size:21px;color:#C7263C;}
+  .rp-note{margin-top:14px;font-size:17px;color:#8894A2;letter-spacing:1px;font-family:"SF Mono",Menlo,monospace;}
+  #L_report .g-twrap{position:relative;left:auto;right:auto;top:auto;bottom:auto;
+    height:196px;margin-top:14px;text-align:left;}
+  #L_report .g-tblock{top:0;bottom:auto;text-align:left;}
+  #L_report .g-tag{font-size:19px;letter-spacing:5px;color:#C7263C;}
+  #L_report .g-ttl{margin-top:8px;font-size:58px;font-weight:700;letter-spacing:2px;color:#14263A;}
+  #L_report .g-sub{margin-top:12px;font-size:22px;letter-spacing:2px;color:#5A6A7C;
+    border-top:1px solid #C9CFD6;padding-top:12px;}
+
+  /* =========================================================================
+     05 · 手写手账便签
+     ========================================================================= */
+  #L_journal{font-family:"Kaiti SC","STKaiti","KaiTi","PingFang SC",serif;}
+  .jn-paper{position:absolute;inset:0;
+    background:
+      radial-gradient(rgba(160,132,88,.16) 1px, transparent 1.4px) 0 0/22px 22px,
+      linear-gradient(180deg, rgba(247,239,221,.78), rgba(240,228,204,.30) 44%, rgba(233,218,190,.80));}
+  .jn-tape{position:absolute;height:52px;background:rgba(214,190,140,.62);
+    box-shadow:0 3px 12px rgba(120,96,52,.28);
+    background-image:repeating-linear-gradient(90deg, rgba(255,255,255,.28) 0 6px, transparent 6px 13px);}
+  .jn-sticky{
+    position:absolute;width:214px;padding:18px 18px 22px;
+    background:linear-gradient(170deg,#FFF3A8,#FFE873);
+    box-shadow:0 12px 26px rgba(120,96,40,.34);
+    font-family:"PingFang SC",sans-serif;font-size:25px;font-weight:700;color:#4A3A16;
+    letter-spacing:1px;line-height:1.3;
+  }
+  .jn-sticky.p{background:linear-gradient(170deg,#FFD3C4,#FBB79E);color:#6B2E1E;}
+  .jn-sticky.g{background:linear-gradient(170deg,#CFEBB6,#AEDD8B);color:#254A16;}
+  .jn-clip{position:absolute;width:26px;height:64px;border:4px solid #9AA3AD;border-radius:13px;
+    box-shadow:0 3px 8px rgba(0,0,0,.3);}
+  #L_journal .g-twrap{bottom:150px;height:330px;}
+  .jn-card{display:inline-block;padding:26px 40px 24px;background:rgba(255,253,246,.97);
+    border-radius:10px;box-shadow:0 16px 34px rgba(120,96,52,.34);position:relative;
+    border-bottom:1px dashed #D9C79E;}
+  #L_journal .g-tag{font-size:22px;letter-spacing:4px;color:#B07A3C;}
+  #L_journal .g-ttl{margin-top:10px;font-size:66px;font-weight:700;color:#2E2A24;letter-spacing:2px;
+    background:linear-gradient(180deg, transparent 58%, rgba(255,233,107,.95) 58%);}
+  #L_journal .g-sub{margin-top:16px;font-size:25px;color:#6A5E4C;letter-spacing:2px;}
+
+  /* =========================================================================
+     06 · 黑板粉笔讲解
+     ========================================================================= */
+  #L_chalk{font-family:"Kaiti SC","STKaiti","KaiTi","PingFang SC",cursive;}
+  .ck-board{position:absolute;inset:0;background:rgba(24,52,44,.88);}
+  .ck-tex{position:absolute;inset:0;opacity:.5;
+    background:
+      radial-gradient(rgba(255,255,255,.055) 1px, transparent 1.3px) 0 0/17px 17px,
+      radial-gradient(rgba(255,255,255,.04) 1px, transparent 1.2px) 7px 9px/29px 29px;}
+  .ck-vig{position:absolute;inset:0;
+    background:radial-gradient(112% 74% at 50% 48%, transparent 34%, rgba(6,18,14,.80) 100%);}
+  .ck-frame{position:absolute;inset:26px;border:5px solid rgba(120,86,52,.85);border-radius:8px;
+    box-shadow:inset 0 0 40px rgba(0,0,0,.5);}
+  .ck-head{position:absolute;left:60px;top:66px;font-size:26px;letter-spacing:4px;
+    color:rgba(242,245,240,.92);text-shadow:0 0 12px rgba(255,255,255,.35);}
+  .ck-dust{position:absolute;border-radius:50%;background:rgba(255,255,255,.5);}
+  .ck-circle{position:absolute;left:66px;top:868px;width:588px;height:222px;}
+  .ck-ul{position:absolute;left:70px;right:70px;top:1104px;height:14px;}
+  #L_chalk .g-twrap{bottom:172px;height:340px;}
+  #L_chalk .g-tag{font-size:24px;letter-spacing:6px;color:#FFD86B;}
+  #L_chalk .g-ttl{margin-top:12px;font-size:70px;font-weight:700;color:#F4F7F2;letter-spacing:3px;
+    text-shadow:0 0 2px rgba(255,255,255,.9), 0 0 22px rgba(255,255,255,.42);}
+  #L_chalk .g-sub{margin-top:16px;font-size:27px;letter-spacing:3px;color:#8FD3FF;
+    text-shadow:0 0 16px rgba(143,211,255,.55);}
+
+  /* =========================================================================
+     07 · 电商促销大字报
+     ========================================================================= */
+  #L_promo{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;}
+  .pm-bg{position:absolute;inset:0;
+    background:
+      radial-gradient(rgba(255,255,255,.30) 3px, transparent 3.4px) 0 0/34px 34px,
+      linear-gradient(180deg, rgba(232,38,43,.28), rgba(14,36,52,.28) 45%, rgba(232,38,43,.42));}
+  .pm-top{position:absolute;left:-30px;right:-30px;top:0;height:150px;
+    background:linear-gradient(96deg,#C81E24,#ED2B31 52%,#C81E24);
+    transform:rotate(-2.2deg);transform-origin:0 0;
+    box-shadow:0 14px 34px rgba(0,0,0,.42);}
+  .pm-top .t{position:absolute;left:56px;right:56px;top:44px;text-align:center;color:#fff;
+    font-size:42px;font-weight:900;letter-spacing:3px;text-shadow:0 3px 0 rgba(0,0,0,.20);}
+  .pm-top .s{position:absolute;left:56px;right:56px;top:98px;text-align:center;color:rgba(255,255,255,.9);
+    font-size:21px;font-weight:700;letter-spacing:7px;}
+  .pm-slash{position:absolute;left:-40px;right:-40px;height:66px;
+    background:linear-gradient(96deg,#FFD400,#FFE45C 55%,#FFD400);
+    transform:rotate(-2.2deg);box-shadow:0 12px 28px rgba(0,0,0,.34);}
+  .pm-slash .t{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:#0E2434;font-size:33px;font-weight:900;letter-spacing:6px;}
+  .pm-burst{position:absolute;right:34px;top:640px;width:186px;height:186px;}
+  .pm-burst .txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:46px;font-weight:900;color:#0E2434;letter-spacing:2px;}
+  #L_promo .g-twrap{bottom:132px;height:330px;}
+  .pm-slab{display:inline-block;padding:22px 34px 26px;border-radius:14px;
+    background:linear-gradient(160deg,#FFD400,#FFC200);
+    box-shadow:0 18px 40px rgba(0,0,0,.44);}
+  #L_promo .g-tag{display:inline-block;font-size:23px;font-weight:900;letter-spacing:4px;color:#fff;
+    background:#E8262B;border-radius:8px;padding:6px 16px 8px;margin-bottom:12px;}
+  #L_promo .g-ttl{font-size:86px;font-weight:900;letter-spacing:4px;color:#fff;
+    -webkit-text-stroke:5px #0E2434;
+    text-shadow:0 7px 0 rgba(14,36,52,.28);}
+  #L_promo .g-sub{margin-top:14px;font-size:25px;font-weight:900;letter-spacing:5px;color:#0E2434;}
+
+  /* =========================================================================
+     08 · 弹幕评论流
+     ========================================================================= */
+  #L_danmu{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;}
+  .dm-veil{position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(6,8,16,.80), rgba(6,8,16,.30) 36%,
+      rgba(6,8,16,.34) 62%, rgba(6,8,16,.90) 100%);}
+  .dm-live{position:absolute;left:32px;top:44px;display:flex;align-items:center;gap:12px;
+    padding:13px 26px;border-radius:999px;background:rgba(232,38,43,.94);
+    font-size:24px;font-weight:800;letter-spacing:3px;color:#fff;
+    box-shadow:0 0 26px rgba(232,38,43,.6);}
+  .dm-live .dot{width:13px;height:13px;border-radius:50%;background:#fff;}
+  .dm-online{position:absolute;right:32px;top:52px;font-size:23px;font-weight:700;letter-spacing:2px;
+    color:rgba(234,251,255,.94);text-shadow:0 0 12px rgba(34,229,255,.7);}
+  .dm-lane{position:absolute;left:0;white-space:nowrap;will-change:transform;}
+  .dm-lane span{display:inline-block;padding:11px 22px;border-radius:999px;
+    font-size:26px;font-weight:600;letter-spacing:1px;color:#fff;
+    background:rgba(10,14,26,.42);border:1.4px solid rgba(255,255,255,.42);
+    text-shadow:0 2px 5px rgba(0,0,0,.75);}
+  .dm-lane.hi span{background:rgba(232,38,43,.72);border-color:rgba(255,255,255,.7);}
+  .dm-bar{position:absolute;left:36px;right:36px;bottom:40px;display:flex;gap:18px;}
+  .dm-bar div{flex:1;text-align:center;padding:13px 0 14px;border-radius:16px;
+    background:rgba(10,14,26,.62);border:1.4px solid rgba(34,229,255,.34);
+    font-size:23px;font-weight:700;letter-spacing:1px;color:rgba(234,251,255,.95);}
+  #L_danmu .g-twrap{bottom:190px;height:340px;text-align:left;}
+  #L_danmu .g-tblock{text-align:left;padding-left:38px;}
+  #L_danmu .g-tag{display:inline-block;font-size:22px;font-weight:800;letter-spacing:3px;color:#fff;
+    background:rgba(232,38,43,.92);border-radius:8px;padding:5px 15px 7px;}
+  #L_danmu .g-ttl{margin-top:12px;font-size:68px;font-weight:900;letter-spacing:3px;color:#fff;
+    text-shadow:0 3px 0 rgba(0,0,0,.6), 0 0 24px rgba(34,229,255,.6);}
+  #L_danmu .g-sub{margin-top:14px;font-size:25px;letter-spacing:3px;color:rgba(234,251,255,.92);
+    text-shadow:0 2px 6px rgba(0,0,0,.7);}
+
+  /* =========================================================================
+     09 · 杂志编辑排版
+     ========================================================================= */
+  #L_magazine{font-family:"Songti SC","STSong",Georgia,serif;}
+  .mg-paper{position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(245,242,233,.80), rgba(245,242,233,.42) 42%,
+      rgba(245,242,233,.90) 100%);}
+  .mg-head{position:absolute;left:46px;right:46px;top:48px;}
+  .mg-head .r{display:flex;justify-content:space-between;align-items:baseline;}
+  .mg-head .np{font-size:27px;letter-spacing:8px;color:#102A3A;}
+  .mg-head .is{font-family:"SF Mono",Menlo,monospace;font-size:18px;letter-spacing:3px;color:#6B7887;}
+  .mg-head .ln{height:1.6px;background:#102A3A;margin-top:11px;}
+  .mg-head .ln2{height:1px;background:rgba(16,42,58,.35);margin-top:4px;}
+  .mg-num{position:absolute;left:auto;right:40px;bottom:400px;font-size:112px;font-weight:300;line-height:.9;
+    letter-spacing:-3px;color:#102A3A;font-family:"SF Mono",Menlo,monospace;}
+  .mg-rule{position:absolute;left:46px;top:842px;width:180px;height:2.4px;background:#102A3A;}
+  .mg-cap{position:absolute;left:46px;bottom:44px;font-family:"SF Mono",Menlo,monospace;
+    font-size:17px;letter-spacing:3px;color:#6B7887;line-height:1.7;}
+  .mg-guide{position:absolute;right:64px;top:220px;bottom:250px;width:1px;background:rgba(16,42,58,.24);}
+  #L_magazine .g-twrap{bottom:190px;height:330px;text-align:left;}
+  #L_magazine .g-tblock{text-align:left;padding-left:46px;}
+  #L_magazine .g-tag{font-family:"SF Mono",Menlo,monospace;font-size:18px;letter-spacing:5px;color:#C7263C;}
+  #L_magazine .g-ttl{margin-top:16px;font-size:78px;font-weight:300;letter-spacing:6px;color:#102A3A;}
+  #L_magazine .g-sub{margin-top:18px;font-size:23px;letter-spacing:4px;color:#5A6A7C;}
+  #L_magazine .g-en{margin-top:10px;font-family:"SF Mono",Menlo,monospace;font-size:16px;
+    letter-spacing:4px;color:#8894A2;}
+
+  /* =========================================================================
+     10 · 极简纪录片章节
+     ========================================================================= */
+  #L_minimal{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;}
+  .mn-veil{position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(14,16,18,.62), rgba(14,16,18,.12) 38%,
+      rgba(14,16,18,.16) 60%, rgba(14,16,18,.86) 100%);}
+  .mn-rail{position:absolute;left:74px;right:74px;top:1156px;height:1.5px;background:rgba(237,232,222,.42);}
+  .mn-rail .fill{position:absolute;left:0;top:0;height:1.5px;background:rgba(237,232,222,.95);}
+  .mn-dot{position:absolute;top:-4px;width:9px;height:9px;border-radius:50%;
+    background:rgba(237,232,222,.42);transform:translateX(-4.5px);}
+  .mn-dot.on{background:#F2EDE3;box-shadow:0 0 12px rgba(242,237,227,.8);}
+  .mn-time{position:absolute;left:74px;top:1180px;font-family:"SF Mono",Menlo,monospace;
+    font-size:17px;letter-spacing:3px;color:rgba(237,232,222,.6);}
+  .mn-time2{position:absolute;right:74px;top:1180px;font-family:"SF Mono",Menlo,monospace;
+    font-size:17px;letter-spacing:3px;color:rgba(237,232,222,.6);}
+  #L_minimal .g-twrap{bottom:250px;height:340px;text-align:left;}
+  #L_minimal .g-tblock{text-align:left;padding-left:74px;}
+  #L_minimal .g-tag{font-family:"SF Mono",Menlo,monospace;font-size:17px;letter-spacing:6px;
+    color:rgba(237,232,222,.72);}
+  #L_minimal .g-ttl{margin-top:18px;font-size:62px;font-weight:600;letter-spacing:5px;color:#F2EDE3;
+    text-shadow:0 3px 16px rgba(0,0,0,.7);}
+  #L_minimal .g-sub{margin-top:16px;font-size:22px;font-weight:400;letter-spacing:4px;
+    color:rgba(237,232,222,.80);}
+
+  /* =========================================================================
+     11 · 新闻播报台
+     ========================================================================= */
+  #L_news{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;}
+  #L_news .nw-bg{position:absolute;inset:0;
+    background:
+      radial-gradient(90% 50% at 50% 0%, rgba(14,50,110,.88), transparent 70%),
+      linear-gradient(180deg, rgba(6,20,46,.88) 0%, rgba(6,20,46,.28) 34%,
+        rgba(6,20,46,.30) 62%, rgba(6,20,46,.94) 100%);}
+  #L_news .nw-grid{position:absolute;left:0;right:0;top:0;height:660px;opacity:.32;
+    background-image:linear-gradient(rgba(120,180,255,.16) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(120,180,255,.16) 1px,transparent 1px);
+    background-size:62px 62px;}
+  #L_news .nw-mark{position:absolute;left:44px;top:76px;display:flex;align-items:center;gap:14px;}
+  #L_news .nw-mark .logo{font-size:28px;font-weight:900;letter-spacing:2px;color:#fff;
+    background:#D4222B;padding:8px 16px 6px;border-radius:4px;}
+  #L_news .nw-mark .ch{font-size:21px;letter-spacing:4px;color:rgba(200,222,255,.92);}
+  #L_news .nw-live{position:absolute;right:44px;top:80px;display:flex;align-items:center;gap:10px;
+    font-size:21px;font-weight:800;letter-spacing:3px;color:#fff;}
+  #L_news .nw-live .dot{width:13px;height:13px;border-radius:50%;background:#FF3B3B;
+    box-shadow:0 0 12px rgba(255,59,59,.95);}
+  #L_news .nw-clock{position:absolute;right:44px;bottom:300px;font-family:"SF Mono",Menlo,monospace;
+    font-size:20px;letter-spacing:2px;color:rgba(190,214,255,.85);}
+  #L_news .nw-bar{position:absolute;left:0;right:0;bottom:0;height:262px;}
+  #L_news .nw-bar .stripe{position:absolute;left:0;right:0;top:0;height:88px;background:#D4222B;}
+  #L_news .nw-bar .body{position:absolute;left:0;right:0;top:88px;bottom:0;background:rgba(5,16,38,.94);
+    border-top:2px solid rgba(120,180,255,.32);}
+  #L_news .nw-bar .kick{position:absolute;left:44px;top:22px;font-size:22px;font-weight:900;
+    letter-spacing:4px;color:#fff;z-index:2;}
+  #L_news .g-twrap{bottom:214px;height:340px;text-align:left;}
+  #L_news .g-tblock{text-align:left;padding-left:44px;}
+  #L_news .g-tag{display:inline-block;font-size:20px;font-weight:900;letter-spacing:4px;color:#fff;
+    background:#D4222B;padding:6px 14px 4px;border-radius:3px;margin-bottom:14px;}
+  #L_news .g-ttl{font-size:70px;font-weight:900;letter-spacing:2px;color:#fff;
+    text-shadow:0 3px 18px rgba(0,0,0,.55);}
+  #L_news .g-sub{margin-top:14px;font-size:25px;letter-spacing:2px;color:rgba(206,226,255,.95);}
+
+  /* =========================================================================
+     12 · 产品发布官网
+     ========================================================================= */
+  #L_product{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;}
+  #L_product .pd-bg{position:absolute;inset:0;
+    background:
+      radial-gradient(70% 44% at 50% 28%, rgba(94,122,255,.30), transparent 66%),
+      radial-gradient(62% 40% at 82% 88%, rgba(0,224,196,.20), transparent 68%),
+      linear-gradient(180deg, rgba(6,8,16,.92), rgba(6,8,16,.60) 46%, rgba(6,8,16,.95));}
+  #L_product .pd-halo{position:absolute;left:50%;top:626px;width:680px;height:680px;margin-left:-340px;
+    border-radius:50%;background:radial-gradient(circle, rgba(120,140,255,.30), transparent 68%);}
+  #L_product .pd-ring{position:absolute;left:50%;top:660px;width:612px;height:612px;margin-left:-306px;
+    border-radius:50%;border:1.4px solid rgba(150,180,255,.24);}
+  #L_product .pd-brand{position:absolute;left:0;right:0;top:96px;text-align:center;
+    font-family:"SF Mono",Menlo,monospace;font-size:20px;letter-spacing:10px;color:rgba(180,200,255,.82);}
+  #L_product .pd-pills{position:absolute;left:0;right:0;bottom:296px;display:flex;gap:12px;
+    justify-content:center;flex-wrap:wrap;padding:0 70px;}
+  #L_product .pd-pill{font-family:"SF Mono",Menlo,monospace;font-size:19px;letter-spacing:1px;
+    color:#CFE0FF;padding:9px 18px;border:1px solid rgba(150,180,255,.42);border-radius:999px;
+    background:rgba(120,140,255,.10);}
+  #L_product .g-twrap{bottom:398px;height:330px;}
+  #L_product .g-tag{font-family:"SF Mono",Menlo,monospace;font-size:19px;letter-spacing:8px;
+    color:rgba(0,224,196,.95);margin-bottom:16px;}
+  #L_product .g-ttl{font-size:78px;font-weight:800;letter-spacing:1px;color:#fff;
+    text-shadow:0 0 40px rgba(120,140,255,.55);}
+  #L_product .g-sub{margin-top:16px;font-size:25px;letter-spacing:4px;color:rgba(200,215,255,.86);}
+
+  /* =========================================================================
+     13 · 流体玻璃拟态
+     ========================================================================= */
+  #L_glass{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;}
+  #L_glass .gl-veil{position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(238,242,255,.26), rgba(228,236,255,.08) 40%, rgba(236,240,255,.30));}
+  #L_glass .gl-blob{position:absolute;border-radius:50%;filter:blur(46px);}
+  #L_glass .g-twrap{bottom:186px;height:380px;}
+  #L_glass .g-tblock{display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  #L_glass .gl-card{position:relative;display:inline-flex;flex-direction:column;align-items:center;
+    padding:34px 48px 30px;border-radius:30px;
+    background:linear-gradient(160deg, rgba(255,255,255,.66), rgba(255,255,255,.32));
+    border:1px solid rgba(255,255,255,.74);
+    box-shadow:0 20px 60px rgba(90,110,190,.24), inset 0 1px 0 rgba(255,255,255,.92);}
+  #L_glass .g-tag{font-size:20px;letter-spacing:6px;color:rgba(70,90,150,.95);margin-bottom:12px;}
+  #L_glass .g-ttl{font-size:66px;font-weight:800;letter-spacing:2px;color:#1B2545;}
+  #L_glass .g-sub{margin-top:14px;font-size:24px;letter-spacing:3px;color:rgba(50,70,120,.82);}
+
+  /* =========================================================================
+     14 · 时间轴进程
+     ========================================================================= */
+  #L_timeline{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;}
+  #L_timeline .tl-veil{position:absolute;inset:0;
+    background:linear-gradient(100deg, rgba(12,20,38,.92) 0%, rgba(12,20,38,.80) 24%,
+      rgba(12,20,38,.36) 54%, rgba(12,20,38,.74) 100%);}
+  #L_timeline .tl-spine{position:absolute;left:96px;top:150px;bottom:300px;width:3px;
+    background:rgba(255,255,255,.20);}
+  #L_timeline .tl-spine .prog{position:absolute;left:0;top:0;width:100%;height:0;
+    background:linear-gradient(180deg,#FF8A4C,#4FD1E0);}
+  #L_timeline .tl-node{position:absolute;left:88px;width:19px;height:19px;border-radius:50%;
+    background:#0C1426;border:2.5px solid rgba(255,255,255,.42);}
+  #L_timeline .tl-node.on{background:#FF8A4C;border-color:#FF8A4C;box-shadow:0 0 16px rgba(255,138,76,.9);}
+  #L_timeline .tl-cap{position:absolute;left:132px;font-family:"SF Mono",Menlo,monospace;
+    font-size:19px;letter-spacing:3px;color:rgba(190,206,236,.78);}
+  #L_timeline .g-twrap{bottom:150px;height:330px;text-align:left;}
+  #L_timeline .g-tblock{text-align:left;padding-left:132px;}
+  #L_timeline .g-tag{font-family:"SF Mono",Menlo,monospace;font-size:19px;letter-spacing:5px;
+    color:#FF8A4C;margin-bottom:10px;}
+  #L_timeline .g-ttl{font-size:62px;font-weight:800;letter-spacing:2px;color:#F4F8FF;}
+  #L_timeline .g-sub{margin-top:14px;font-size:24px;letter-spacing:2px;color:rgba(180,200,236,.85);}
+
+  /* =========================================================================
+     15 · 金句名言卡
+     ========================================================================= */
+  #L_quote{font-family:"Songti SC","STSong",Georgia,serif;}
+  #L_quote .qt-veil{position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(244,240,232,.88), rgba(238,232,220,.58) 42%, rgba(240,234,224,.92));}
+  #L_quote .qt-mark{position:absolute;left:56px;top:236px;font-size:280px;line-height:.72;
+    color:rgba(198,38,60,.20);}
+  #L_quote .qt-rule{position:absolute;left:56px;right:56px;bottom:190px;height:1.5px;
+    background:rgba(30,40,60,.32);}
+  #L_quote .qt-sign{position:absolute;right:60px;bottom:136px;font-size:23px;letter-spacing:3px;
+    color:rgba(50,62,84,.85);}
+  #L_quote .g-twrap{bottom:266px;height:340px;}
+  #L_quote .g-tag{font-family:"SF Mono",Menlo,monospace;font-size:18px;letter-spacing:6px;
+    color:rgba(198,38,60,.95);margin-bottom:18px;}
+  #L_quote .g-ttl{font-size:72px;font-weight:600;letter-spacing:4px;color:#182234;line-height:1.18;}
+  #L_quote .g-sub{margin-top:20px;font-size:24px;letter-spacing:3px;color:rgba(60,72,92,.85);}
+
+  /* =========================================================================
+     16 · 播客声波
+     ========================================================================= */
+  #L_podcast{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;}
+  #L_podcast .pc-bg{position:absolute;inset:0;
+    background:
+      radial-gradient(80% 46% at 26% 16%, rgba(255,120,80,.30), transparent 66%),
+      radial-gradient(80% 46% at 82% 88%, rgba(120,90,255,.30), transparent 68%),
+      linear-gradient(180deg, rgba(16,10,24,.92), rgba(16,10,24,.60) 46%, rgba(14,9,22,.95));}
+  #L_podcast .pc-cover{position:absolute;left:56px;top:150px;width:200px;height:200px;border-radius:22px;
+    background:linear-gradient(150deg, rgba(255,140,90,.88), rgba(140,100,255,.88));
+    box-shadow:0 20px 50px rgba(60,30,90,.55);}
+  #L_podcast .pc-cover .mic{position:absolute;inset:0;width:100%;height:100%;padding:38px;}
+  #L_podcast .pc-meta{position:absolute;left:288px;top:170px;text-align:left;}
+  #L_podcast .pc-meta .t{font-size:30px;font-weight:800;letter-spacing:2px;color:#fff;}
+  #L_podcast .pc-meta .s{font-family:"SF Mono",Menlo,monospace;font-size:19px;letter-spacing:4px;
+    color:rgba(230,214,255,.82);margin-top:10px;}
+  #L_podcast .pc-wave{position:absolute;left:56px;right:56px;bottom:372px;height:132px;display:flex;
+    align-items:center;justify-content:space-between;}
+  #L_podcast .pc-wave i{display:block;width:8px;border-radius:99px;
+    background:linear-gradient(180deg,#FF8C5A,#8C64FF);}
+  #L_podcast .g-twrap{bottom:150px;height:300px;}
+  #L_podcast .g-tag{font-family:"SF Mono",Menlo,monospace;font-size:19px;letter-spacing:6px;
+    color:rgba(255,160,110,.95);margin-bottom:12px;}
+  #L_podcast .g-ttl{font-size:64px;font-weight:800;letter-spacing:2px;color:#fff;}
+  #L_podcast .g-sub{margin-top:14px;font-size:24px;letter-spacing:3px;color:rgba(226,214,255,.88);}
+
+  /* =========================================================================
+     17 · 旅行 vlog 贴纸
+     ========================================================================= */
+  #L_travel{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;}
+  #L_travel .tv-veil{position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(255,250,240,.44), rgba(255,246,232,.16) 40%, rgba(255,248,236,.56));}
+  #L_travel .tv-polar{position:absolute;background:#fff;padding:12px 12px 46px;border-radius:6px;
+    box-shadow:0 14px 34px rgba(70,50,30,.30);}
+  #L_travel .tv-polar .ph{width:100%;height:100%;border-radius:3px;
+    background:linear-gradient(150deg,#BFE3FF,#FFE3C2);}
+  #L_travel .tv-ticket{position:absolute;border-radius:10px;background:rgba(255,255,255,.92);
+    border:1.6px dashed rgba(190,150,110,.72);}
+  #L_travel .tv-tag{position:absolute;font-size:22px;font-weight:800;color:#fff;letter-spacing:2px;
+    padding:6px 16px 4px;border-radius:99px;}
+  #L_travel .g-twrap{bottom:160px;height:340px;}
+  #L_travel .g-tag{display:inline-block;font-size:20px;font-weight:800;letter-spacing:3px;color:#fff;
+    background:#FF7A59;padding:5px 15px 3px;border-radius:99px;margin-bottom:14px;}
+  #L_travel .g-ttl{font-size:70px;font-weight:900;letter-spacing:3px;color:#2B2118;
+    text-shadow:0 2px 0 rgba(255,255,255,.85);}
+  #L_travel .g-sub{margin-top:14px;font-size:24px;letter-spacing:3px;color:rgba(70,55,40,.9);}
+
+  /* =========================================================================
+     18 · 工程蓝图
+     ========================================================================= */
+  #L_blueprint{font-family:"SF Mono",Menlo,Consolas,monospace;}
+  #L_blueprint .bp-bg{position:absolute;inset:0;background:#0A2A5E;}
+  #L_blueprint .bp-grid{position:absolute;inset:0;
+    background-image:linear-gradient(rgba(255,255,255,.14) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.14) 1px,transparent 1px),
+      linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);
+    background-size:120px 120px,120px 120px,24px 24px,24px 24px;}
+  #L_blueprint .bp-frame{position:absolute;inset:40px;border:2px solid rgba(255,255,255,.70);}
+  #L_blueprint .bp-cap{position:absolute;left:64px;top:104px;font-size:19px;letter-spacing:4px;
+    color:rgba(255,255,255,.88);}
+  #L_blueprint .bp-meta{position:absolute;left:64px;bottom:96px;font-size:18px;letter-spacing:2px;
+    color:rgba(255,255,255,.72);}
+  #L_blueprint .bp-dim{position:absolute;color:rgba(255,255,255,.80);font-size:17px;letter-spacing:1px;}
+  #L_blueprint .g-twrap{bottom:170px;height:330px;}
+  #L_blueprint .g-tag{font-size:20px;letter-spacing:6px;color:#8FD3FF;margin-bottom:12px;}
+  #L_blueprint .g-ttl{font-size:66px;font-weight:700;letter-spacing:3px;color:#fff;}
+  #L_blueprint .g-sub{margin-top:14px;font-size:23px;letter-spacing:2px;color:rgba(214,234,255,.9);}
+
+  /* =========================================================================
+     19 · 渐变大字现代
+     ========================================================================= */
+  #L_gradient{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;}
+  #L_gradient .gd-bg{position:absolute;inset:0;
+    background:linear-gradient(150deg,#6C4CF1 0%,#C24CE0 34%,#FF6A88 66%,#FFB86B 100%);}
+  #L_gradient .gd-mesh{position:absolute;inset:-6%;opacity:.55;
+    background:
+      radial-gradient(60% 40% at 20% 22%, rgba(120,220,255,.66), transparent 66%),
+      radial-gradient(60% 44% at 84% 76%, rgba(255,240,150,.56), transparent 68%);}
+  #L_gradient .gd-veil{position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(20,10,40,.30), rgba(20,10,40,.04) 40%, rgba(20,10,40,.44));}
+  #L_gradient .g-twrap{bottom:192px;height:360px;}
+  #L_gradient .g-tag{font-size:21px;font-weight:800;letter-spacing:8px;color:rgba(255,255,255,.92);
+    margin-bottom:16px;}
+  #L_gradient .g-ttl{font-size:92px;font-weight:900;letter-spacing:2px;color:#fff;line-height:1.04;
+    text-shadow:0 6px 40px rgba(60,20,90,.45);}
+  #L_gradient .g-sub{margin-top:18px;font-size:26px;font-weight:700;letter-spacing:4px;color:rgba(255,255,255,.95);}
+
+  /* =========================================================================
+     20 · 信息卡片流
+     ========================================================================= */
+  #L_card{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;}
+  #L_card .cd-veil{position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(246,248,252,.88), rgba(240,244,250,.54) 42%, rgba(244,247,252,.92));}
+  #L_card .cd-head{position:absolute;left:56px;top:110px;display:flex;align-items:center;gap:16px;}
+  #L_card .cd-head .av{width:66px;height:66px;border-radius:50%;
+    background:linear-gradient(150deg,#8CC7FF,#C9A8FF);}
+  #L_card .cd-head .nm{text-align:left;}
+  #L_card .cd-head .nm .a{font-size:25px;font-weight:800;color:#1D2739;}
+  #L_card .cd-head .nm .b{font-family:"SF Mono",Menlo,monospace;font-size:18px;letter-spacing:2px;
+    color:rgba(90,105,130,.85);margin-top:5px;}
+  #L_card .cd-chips{position:absolute;left:56px;bottom:330px;display:flex;gap:10px;flex-wrap:wrap;
+    max-width:608px;}
+  #L_card .cd-chip{font-size:20px;font-weight:700;letter-spacing:1px;color:#3A4A66;
+    background:rgba(140,170,230,.20);border:1px solid rgba(140,170,230,.42);
+    padding:7px 16px 5px;border-radius:99px;}
+  #L_card .cd-card{position:relative;display:inline-block;padding:30px 40px 26px;border-radius:26px;
+    background:#fff;box-shadow:0 18px 46px rgba(80,100,140,.18);}
+  #L_card .cd-idx{position:absolute;left:-14px;top:-14px;width:52px;height:52px;border-radius:14px;
+    background:linear-gradient(150deg,#5B8DEF,#9C6BFF);color:#fff;font-size:25px;font-weight:900;
+    display:flex;align-items:center;justify-content:center;opacity:0;}
+  #L_card .g-twrap{bottom:186px;height:330px;}
+  #L_card .g-tag{font-size:20px;letter-spacing:5px;color:rgba(90,110,150,.95);margin-bottom:12px;}
+  #L_card .g-ttl{font-size:66px;font-weight:900;letter-spacing:2px;color:#1D2739;}
+  #L_card .g-sub{margin-top:14px;font-size:24px;letter-spacing:2px;color:rgba(80,98,128,.85);}
+/* ---------- shared insert-image layer (all 20 skins share this one) ------ */
+.g-imglayer{position:absolute;inset:0;pointer-events:none;z-index:60;}
+.g-imgcard{
+  position:absolute;width:246px;height:328px;border-radius:15px;overflow:hidden;
+  display:none;background:rgba(10,12,16,.55);
+  box-shadow:0 18px 44px rgba(0,0,0,.66),0 0 0 3px rgba(255,255,255,.10);
+  will-change:transform,opacity;backface-visibility:hidden;
+}
+.g-imgcard img{width:100%;height:100%;object-fit:cover;display:block;}
+.g-imgcard::after{
+  content:"";position:absolute;inset:0;border-radius:15px;
+  border:1.5px solid rgba(255,255,255,.34);
+  background:linear-gradient(180deg,rgba(255,255,255,.14),transparent 34%,rgba(0,0,0,.34));
+}
+</style>
+</head>
+<body>
+<div id="stage">
+  <video id="footage" muted playsinline preload="auto"></video>
+</div>
+
+<script src="templates.js"></script>
+<script>
+/* ============================== runtime ================================== */
+const FALLBACK = {
+  duration: 20.067,
+  brand: { name:"OPC-AID", city:"深圳 宝安", unit:"FIELD UNIT 01", issue:"NO.01", year:"2026", slogan:"让 AI 营销落地" },
+  beats: [
+    { t0:0.30,  t1:3.30,  tag:"起点", title:"深圳 · 宝安",    sub:"中国有个地方叫深圳", en:"SHENZHEN · BAO'AN" },
+    { t0:3.30,  t1:6.90,  tag:"状态", title:"OPC-AID 已成立", sub:"深圳 宝安 · 项目启动", en:"PROJECT LAUNCHED" },
+    { t0:6.90,  t1:12.50, tag:"主题", title:"拆解营销全链路",  sub:"内容 → 流量 → 转化",   en:"FULL-FUNNEL BREAKDOWN" },
+    { t0:12.50, t1:17.10, tag:"行动", title:"评论回复 666",   sub:"深圳 宝安 · OPC-AID", en:"COMMENT 666" },
+    { t0:17.10, t1:20.07, tag:"收尾", title:"让 AI 营销落地",  sub:"加入实战案例",         en:"LET IT LAND" },
+  ],
+  keywords: ["获客成本","内容产能","转化率","AI 营销"],
+  metrics: [
+    { label:"内容产能", value:12, unit:"倍",  delta:"+38%" },
+    { label:"获客成本", value:63, unit:"%↓", delta:"-41%" },
+    { label:"交付周期", value:7,  unit:"天",  delta:"-55%" },
+  ],
+  chart: [22,34,30,48,44,62,58,76,71,88],
+  danmu: ["宝安的朋友举个手","666 已回复","这个拆解好清楚","AI 营销真能落地吗",
+          "求一份实战案例","做实体店的太需要了","终于把链路讲明白了","已经关注，等更新"],
+};
+
+const params = new URLSearchParams(location.search);
+const STYLE  = params.get('style') || 'crt';
+const MODE   = params.get('mode')  || 'overlay';
+const src    = params.get('src');
+const stage  = document.getElementById('stage');
+const STAGE_W = stage.clientWidth  || 720;   /* 配图定位用，跟随实际视口 */
+const STAGE_H = stage.clientHeight || 1280;
+/* templates.json is the editable source of truth; templates.js is generated
+   from it (see preview10.py) so the page also works straight off the disk. */
+let CFG = (window.__TPL && window.__TPL.beats) ? window.__TPL : FALLBACK;
+
+if (MODE === 'preview' && src) {
+  document.body.classList.add('preview');
+  document.getElementById('footage').src = src;
+}
+
+const el = (tag, cls, html) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html != null) e.innerHTML = html;
+  return e;
+};
+const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
+const ease = p => { p = clamp01(p); return p * p * (3 - 2 * p); };
+const seg = (t, a, b) => t >= a && t < b;
+function sp(p, z = 0.66, w = 15) {
+  p = Math.max(0, p); if (p === 0) return 0;
+  const wd = w * Math.sqrt(1 - z * z);
+  return 1 - Math.exp(-z * w * p) * (Math.cos(wd * p) + (z * w / wd) * Math.sin(wd * p));
+}
+function beatAt(t, C) {
+  let i = 0;
+  for (let k = 0; k < C.beats.length; k++) if (t >= C.beats[k].t0) i = k;
+  return i;
+}
+function rnd(seed) { let s = seed >>> 0; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+
+/* shared headline: 5 blocks, one per spoken beat ------------------------- */
+function mkBeats(host, C, o) {
+  o = o || {};
+  const wrap = el('div', o.wrap || 'g-twrap');
+  const items = C.beats.map(b => {
+    const box  = el('div', 'g-tblock');
+    const tag  = el('div', 'g-tag', b.tag);
+    const ttl  = el('div', 'g-ttl');
+    const inn  = el('span', 'g-in', b.title);
+    ttl.appendChild(inn);
+    box.appendChild(tag); box.appendChild(ttl);
+    box.appendChild(el('div', 'g-sub', b.sub));
+    if (o.en) box.appendChild(el('div', 'g-en', b.en));
+    wrap.appendChild(box);
+    return { box, inn };
+  });
+  host.appendChild(wrap);
+  return { wrap, items };
+}
+function showBeats(items, t, C, rise, sf) {
+  const i = beatAt(t, C);
+  items.forEach((it, k) => {
+    if (k !== i) { it.box.style.visibility = 'hidden'; it.box.style.opacity = '0'; return; }
+    const b = C.beats[k], p = t - b.t0;
+    const out = clamp01((b.t1 - t) / 0.34);
+    const e = sp(p / (sf || 0.60), 0.68, 16);
+    it.box.style.visibility = 'visible';
+    it.box.style.opacity = (clamp01(p / 0.16) * out).toFixed(3);
+    it.box.style.transform =
+      `translateY(${((1 - e) * (rise == null ? 46 : rise)).toFixed(2)}px) scale(${(0.92 + 0.08 * e).toFixed(4)})`;
+  });
+  return i;
+}
+function fitBeats(items, maxW) {
+  items.forEach(it => {
+    it.inn.style.transform = '';
+    const w = it.inn.getBoundingClientRect().width;
+    if (w > maxW) it.inn.style.transform = `scale(${(maxW / w).toFixed(4)})`;
+  });
+}
+/* share one headline skin class on the block container */
+function skinBeats(items, cls) {
+  items.forEach(it => {
+    const c = it.box.querySelector('.g-ttl');
+    const d = document.createElement('div');
+    d.className = cls;
+    it.box.insertBefore(d, c);
+    d.appendChild(c);
+    const sq = it.box.querySelector('.g-sub');
+    d.appendChild(sq);
+  });
+}
+
+/* ============================== templates ================================ */
+const S = {};
+
+/* --- 01 CRT ------------------------------------------------------------- */
+S.crt = {
+  name: 'CRT 复古数据终端',
+  build(host, C) {
+    host.appendChild(el('div', 'crt-tint'));
+    host.appendChild(el('div', 'crt-scan'));
+    host.appendChild(el('div', 'crt-vig'));
+    this.scan = host.querySelector('.crt-scan');
+
+    const r1 = el('div', 'crt-rule'); r1.style.top = '132px'; host.appendChild(r1);
+    const r2 = el('div', 'crt-rule'); r2.style.top = '1148px'; host.appendChild(r2);
+    this.rules = [r1, r2];
+
+    const corners = [['SYS//OPC-AID','56px','56px'], ['20:07:31','56px','1160px'],
+                     ['MEM 62%','520px','56px'], ['● REC','510px','1160px']];
+    this.corners = corners.map(([tx, l, tp]) => {
+      const d = el('div', 'crt-corner', tx);
+      d.style.left = l; d.style.top = tp;
+      host.appendChild(d); return d;
+    });
+
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'crt-box');
+    this.beats.items.forEach(it => {
+      const caret = el('span', 'crt-caret');
+      it.box.querySelector('.crt-box').appendChild(caret);
+    });
+    this.carets = this.beats.items.map(it => it.box.querySelector('.crt-caret'));
+  },
+  fit(C) { fitBeats(this.beats.items, 500); },
+  draw(t, C) {
+    this.scan.style.transform = `translateY(${(t * 26 % 4).toFixed(2)}px)`;
+    this.rules.forEach((r, i) => r.style.opacity = (0.35 + 0.25 * Math.sin(t * 3 + i)).toFixed(3));
+    this.corners.forEach((c, i) => c.style.opacity = (0.72 + 0.28 * Math.abs(Math.sin(t * 2.1 + i * 1.3))).toFixed(3));
+    const i = showBeats(this.beats.items, t, C, 22, 0.55);
+    this.carets.forEach((c, k) => c.style.opacity = (k === i ? (Math.sin(t * 7) > 0 ? 1 : 0) : 0));
+  },
+};
+
+/* --- 02 复古胶片 --------------------------------------------------------- */
+S.retro = {
+  name: '复古胶片双语',
+  build(host, C) {
+    host.appendChild(el('div', 'rt-warm'));
+    host.appendChild(el('div', 'rt-vig'));
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'rt-grain');
+    svg.innerHTML =
+      '<filter id="grainF"><feTurbulence type="fractalNoise" baseFrequency="0.78" numOctaves="3" stitchTiles="stitch"/>' +
+      '<feColorMatrix type="saturate" values="0"/></filter>' +
+      '<rect width="100%" height="100%" filter="url(#grainF)"/>';
+    host.appendChild(svg);
+    this.grain = svg;
+
+    const bt = el('div', 'rt-bar'); bt.style.top = '0'; host.appendChild(bt);
+    const bb = el('div', 'rt-bar'); bb.style.bottom = '0'; host.appendChild(bb);
+
+    const mkPerf = side => {
+      const p = el('div', 'rt-perf');
+      p.style[side] = '18px';
+      for (let i = 0; i < 12; i++) p.appendChild(el('i'));
+      host.appendChild(p); return p;
+    };
+    mkPerf('left'); mkPerf('right');
+
+    const top = el('div', 'rt-top');
+    top.innerHTML = `<span>ROLL 01 · ${C.brand.year}</span><span>16mm · COLOR</span>`;
+    host.appendChild(top);
+    this.top = top;
+
+    this.beats = mkBeats(host, C, { en: true });
+    skinBeats(this.beats.items, 'rt-frame');
+  },
+  fit(C) { fitBeats(this.beats.items, 580); },
+  draw(t, C) {
+    this.grain.style.transform =
+      `translate(${(Math.sin(t * 9.1) * 9).toFixed(1)}px,${(Math.cos(t * 11.3) * 9).toFixed(1)}px)`;
+    this.grain.style.opacity = (0.13 + 0.05 * Math.sin(t * 6.4)).toFixed(3);
+    this.top.style.opacity = (0.72 + 0.28 * clamp01((t - 0.4) / 1.2)).toFixed(3);
+    showBeats(this.beats.items, t, C, 30, 0.7);
+  },
+};
+
+/* --- 03 数据仪表盘 ------------------------------------------------------- */
+S.dash = {
+  name: '增长数据仪表盘',
+  build(host, C) {
+    host.appendChild(el('div', 'ds-veil'));
+
+    const top = el('div', 'ds-top');
+    top.innerHTML = `<span class="dot"></span>${C.brand.name} · 增长看板`;
+    host.appendChild(top); this.top = top;
+
+    const ring = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    ring.setAttribute('class', 'ds-ring'); ring.setAttribute('viewBox', '0 0 76 76');
+    ring.innerHTML =
+      '<circle cx="38" cy="38" r="31" fill="none" stroke="rgba(79,209,224,.22)" stroke-width="5"/>' +
+      '<circle id="dsArc" cx="38" cy="38" r="31" fill="none" stroke="#4FD1E0" stroke-width="5" ' +
+      'stroke-linecap="round" transform="rotate(-90 38 38)" stroke-dasharray="194.8" stroke-dashoffset="194.8"/>';
+    host.appendChild(ring);
+    this.arc = ring.querySelector('#dsArc');
+
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'ds-card');
+
+    const card = el('div', 'ds-glass ds-chart');
+    card.innerHTML = '<div class="cap">内容产能趋势</div>';
+    const cs = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    cs.setAttribute('viewBox', '0 0 600 104'); cs.setAttribute('preserveAspectRatio', 'none');
+    const pts = C.chart.map((v, i) => [i * (600 / (C.chart.length - 1)), 96 - v * 1.0]);
+    const dline = 'M' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L');
+    cs.innerHTML =
+      `<path d="${dline} L600 104 L0 104 Z" fill="rgba(79,209,224,.16)"/>` +
+      `<path id="dsLine" d="${dline}" fill="none" stroke="#4FD1E0" stroke-width="3" ` +
+      'stroke-linecap="round" stroke-linejoin="round"/>' +
+      pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="#A8E063"/>`).join('');
+    card.appendChild(cs);
+    host.appendChild(card);
+    this.line = cs.querySelector('#dsLine');
+    this.area = cs.querySelector('path');
+    this.len = this.line.getTotalLength();
+
+    const kpi = el('div', 'ds-kpi');
+    C.metrics.forEach(m => {
+      const d = el('div', 'ds-glass');
+      d.innerHTML = `<div class="l">${m.label}</div>` +
+                    `<div class="v"><span>0</span><small>${m.unit}</small></div>` +
+                    `<div class="d">${m.delta}</div>`;
+      kpi.appendChild(d);
+    });
+    host.appendChild(kpi);
+    this.kpis = [...kpi.querySelectorAll('.v span')];
+  },
+  fit(C) { fitBeats(this.beats.items, 500); },
+  draw(t, C) {
+    const i = showBeats(this.beats.items, t, C, 34, 0.62);
+    const b = C.beats[i];
+    const p = ease(clamp01((t - b.t0 - 0.15) / 1.15));
+    this.kpis.forEach((k, idx) => k.textContent = Math.round(C.metrics[idx].value * p));
+    this.arc.setAttribute('stroke-dashoffset', (194.8 * (1 - p)).toFixed(2));
+    this.line.setAttribute('stroke-dasharray', this.len.toFixed(1));
+    this.line.setAttribute('stroke-dashoffset', (this.len * (1 - p)).toFixed(1));
+    this.area.style.opacity = (0.25 + 0.75 * p).toFixed(3);
+    this.top.style.opacity = (0.75 + 0.25 * Math.sin(t * 2.4)).toFixed(3);
+  },
+};
+
+/* --- 04 财经研报 --------------------------------------------------------- */
+S.report = {
+  name: '财经研报纪要',
+  build(host, C) {
+    const head = el('div', 'rp-head');
+    head.innerHTML = `<b>${C.brand.name}</b><span>现场纪要 · ${C.brand.issue} · ${C.brand.year}</span>`;
+    host.appendChild(head); this.head = head;
+
+    const paper = el('div', 'rp-paper');
+    paper.innerHTML =
+      `<div class="rp-kick"><span class="n">${C.brand.city} · 营销全链路拆解</span>` +
+      `<span class="m">${C.brand.unit}</span></div><div class="rp-kick2"></div>`;
+    const tbl = el('div', 'rp-tbl');
+    C.metrics.forEach(m => {
+      const tr = el('div', 'rp-tr');
+      tr.innerHTML = `<div class="c1">${m.label}</div>` +
+                     `<div class="c2">${m.value}${m.unit}</div>` +
+                     `<div class="c3">${m.delta}</div>`;
+      tbl.appendChild(tr);
+    });
+    this.beats = mkBeats(paper, C, {});
+    skinBeats(this.beats.items, 'rp-tblock');
+    paper.appendChild(tbl);
+    paper.appendChild(el('div', 'rp-note', '* 指标为模板占位示例，发布前请替换为真实数据'));
+    host.appendChild(paper);
+    this.paper = paper;
+    this.rows = [...tbl.querySelectorAll('.rp-tr')];
+  },
+  fit(C) { fitBeats(this.beats.items, 500); },
+  draw(t, C) {
+    const i = showBeats(this.beats.items, t, C, 30, 0.6);
+    this.rows.forEach((r, k) => {
+      const p = ease(clamp01((t - C.beats[i].t0 - 0.35 - k * 0.14) / 0.5));
+      r.style.opacity = p.toFixed(3);
+      r.style.transform = `translateX(${((1 - p) * -22).toFixed(1)}px)`;
+    });
+    this.head.style.opacity = (0.78 + 0.22 * clamp01((t - 0.3) / 1)).toFixed(3);
+  },
+};
+
+/* --- 05 手写手账 --------------------------------------------------------- */
+S.journal = {
+  name: '手写手账便签',
+  build(host, C) {
+    host.appendChild(el('div', 'jn-paper'));
+
+    const tapes = [[40, 190, -7], [520, 96, 6], [300, 1180, -4]];
+    this.tapes = tapes.map(([l, tp, r]) => {
+      const d = el('div', 'jn-tape');
+      d.style.left = l + 'px'; d.style.top = tp + 'px'; d.style.width = '220px';
+      d.style.transform = `rotate(${r}deg)`;
+      host.appendChild(d); return d;
+    });
+
+    const kinds = ['', 'p', 'g'];
+    const POS = [[46, 648, -5], [442, 690, 4], [88, 792, 3], [448, 838, -6]];
+    this.stickies = C.keywords.slice(0, 4).map((k, i) => {
+      const d = el('div', 'jn-sticky ' + kinds[i % 3], k);
+      const [x, y, r] = POS[i % 4];
+      d.style.left = x + 'px'; d.style.top = y + 'px';
+      d.dataset.r = r;
+      host.appendChild(d); return d;
+    });
+
+    this.clips = [[356, 660], [38, 806]].map(([l, tp]) => {
+      const d = el('div', 'jn-clip');
+      d.style.left = l + 'px'; d.style.top = tp + 'px';
+      host.appendChild(d); return d;
+    });
+
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'jn-card');
+  },
+  fit(C) { fitBeats(this.beats.items, 540); },
+  draw(t, C) {
+    showBeats(this.beats.items, t, C, 34, 0.58);
+    this.stickies.forEach((d, i) => {
+      const p = ease(clamp01((t - 1.2 - i * 0.5) / 0.7));
+      if (p <= 0) { d.style.opacity = '0'; return; }
+      const r = parseFloat(d.dataset.r);
+      d.style.opacity = p.toFixed(3);
+      d.style.transform =
+        `translateY(${((1 - p) * -34).toFixed(1)}px) rotate(${(r + Math.sin(t * 1.1 + i) * 1.2).toFixed(2)}deg)`;
+    });
+    this.clips.forEach((d, i) => d.style.opacity =
+      (0.55 + 0.25 * Math.sin(t * 2 + i)).toFixed(3));
+  },
+};
+
+/* --- 06 黑板粉笔 --------------------------------------------------------- */
+S.chalk = {
+  name: '黑板粉笔讲解',
+  build(host, C) {
+    host.appendChild(el('div', 'ck-board'));
+    host.appendChild(el('div', 'ck-tex'));
+    host.appendChild(el('div', 'ck-vig'));
+    host.appendChild(el('div', 'ck-frame'));
+
+    host.appendChild(el('div', 'ck-head', `第 01 课 · ${C.brand.city}`));
+
+    const R = rnd(7);
+    for (let i = 0; i < 34; i++) {
+      const d = el('div', 'ck-dust');
+      const s = 2 + R() * 4;
+      d.style.left = (R() * 700) + 'px'; d.style.top = (R() * 1240) + 'px';
+      d.style.width = s + 'px'; d.style.height = s + 'px';
+      d.dataset.ph = R().toFixed(3);
+      host.appendChild(d);
+    }
+    this.dust = [...host.querySelectorAll('.ck-dust')];
+
+    const cir = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    cir.setAttribute('class', 'ck-circle'); cir.setAttribute('viewBox', '0 0 588 222');
+    cir.innerHTML =
+      '<ellipse cx="294" cy="111" rx="282" ry="96" fill="none" stroke="rgba(255,216,107,.8)" ' +
+      'stroke-width="4" stroke-linecap="round" stroke-dasharray="1180" stroke-dashoffset="1180" ' +
+      'transform="rotate(-1.6 294 111)"/>';
+    host.appendChild(cir);
+    this.circle = cir.querySelector('ellipse');
+    this.circleLen = this.circle.getTotalLength();
+
+    const ul = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    ul.setAttribute('class', 'ck-ul'); ul.setAttribute('viewBox', '0 0 580 14');
+    ul.innerHTML = '<path d="M4 9 C 130 3, 300 13, 420 6 S 540 10, 576 5" fill="none" ' +
+      'stroke="rgba(143,211,255,.85)" stroke-width="3.4" stroke-linecap="round" ' +
+      'stroke-dasharray="600" stroke-dashoffset="600"/>';
+    host.appendChild(ul);
+    this.ul = ul.querySelector('path');
+    this.ulLen = this.ul.getTotalLength();
+
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'ck-tblock');
+  },
+  fit(C) { fitBeats(this.beats.items, 500); },
+  draw(t, C) {
+    const i = showBeats(this.beats.items, t, C, 26, 0.63);
+    const b = C.beats[i];
+    const p = ease(clamp01((t - b.t0 - 0.30) / 0.9));
+    this.circle.setAttribute('stroke-dashoffset', (this.circleLen * (1 - p)).toFixed(1));
+    this.ul.setAttribute('stroke-dashoffset', (this.ulLen * (1 - p)).toFixed(1));
+    this.dust.forEach(d => {
+      const ph = parseFloat(d.dataset.ph);
+      d.style.opacity = (0.10 + 0.30 * Math.abs(Math.sin(t * (0.5 + ph) + ph * 6))).toFixed(3);
+    });
+  },
+};
+
+/* --- 07 电商促销 --------------------------------------------------------- */
+S.promo = {
+  name: '电商促销大字报',
+  build(host, C) {
+    host.appendChild(el('div', 'pm-bg'));
+
+    const top = el('div', 'pm-top');
+    top.innerHTML = `<div class="t">${C.brand.city} · ${C.brand.name} 已成立</div>` +
+                    `<div class="s">营销全链路拆解</div>`;
+    host.appendChild(top); this.top = top;
+
+    const s1 = el('div', 'pm-slash'); s1.style.top = '836px';
+    s1.innerHTML = '<div class="t">痛点 → 方案 → 行动</div>';
+    host.appendChild(s1); this.slash = s1;
+
+    const burst = el('div', 'pm-burst');
+    burst.innerHTML =
+      '<svg viewBox="0 0 186 186" width="186" height="186">' +
+      '<polygon id="pmStar" fill="#E8262B" stroke="#fff" stroke-width="4" points="' +
+      '93,4 106,32 132,18 131,48 160,50 138,72 162,87 135,99 146,127 116,120 108,149 93,124 ' +
+      '78,149 70,120 40,127 51,99 24,87 48,72 26,50 55,48 54,18 80,32"/></svg>' +
+      '<div class="txt">限时</div>';
+    host.appendChild(burst); this.burst = burst;
+    this.star = burst.querySelector('#pmStar');
+
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'pm-slab');
+  },
+  fit(C) { fitBeats(this.beats.items, 540); },
+  draw(t, C) {
+    const e = sp((t - 0.15) / 0.55, 0.72, 16);
+    this.top.style.transform = `rotate(-2.2deg) translateY(${((1 - e) * -160).toFixed(1)}px)`;
+    const e2 = sp((t - 0.85) / 0.55, 0.72, 16);
+    this.slash.style.transform = `rotate(-2.2deg) translateY(${((1 - e2) * 120).toFixed(1)}px)`;
+
+    const be = sp((t - 0.5) / 0.6, 0.62, 16);
+    const wob = Math.sin(t * 2.1) * 3.4;
+    this.burst.style.opacity = clamp01((t - 0.5) / 0.25).toFixed(3);
+    this.burst.style.transform =
+      `scale(${(0.35 + 0.65 * be).toFixed(3)}) rotate(${(-14 + wob).toFixed(2)}deg)`;
+    this.star.setAttribute('fill', Math.sin(t * 3.4) > 0 ? '#E8262B' : '#FF6A1A');
+
+    const i = showBeats(this.beats.items, t, C, 40, 0.55);
+    const d = window.document.querySelectorAll('.pm-slab');
+    if (d[i]) {
+      const k = 1 + 0.018 * Math.sin((t - C.beats[i].t0) * 3.6);
+      d[i].style.transform = `scale(${k.toFixed(4)})`;
+    }
+  },
+};
+
+/* --- 08 弹幕 ------------------------------------------------------------- */
+S.danmu = {
+  name: '弹幕评论流',
+  build(host, C) {
+    host.appendChild(el('div', 'dm-veil'));
+
+    const live = el('div', 'dm-live', '<span class="dot"></span>LIVE');
+    host.appendChild(live); this.live = live;
+    host.appendChild(el('div', 'dm-online', '1.2 万人在看'));
+
+    this.lanes = C.danmu.map((txt, i) => {
+      const lane = el('div', 'dm-lane' + (i % 3 === 0 ? ' hi' : ''));
+      lane.appendChild(el('span', null, txt));
+      lane.style.top = (138 + i * 62) + 'px';
+      host.appendChild(lane);
+      return lane;
+    });
+
+    const bar = el('div', 'dm-bar');
+    bar.innerHTML = '<div>1.2w 点赞</div><div>366 评论</div><div>分享</div>';
+    host.appendChild(bar); this.bar = bar;
+
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'dm-tblock');
+  },
+  fit(C) { fitBeats(this.beats.items, 560); },
+  draw(t, C) {
+    this.lanes.forEach((lane, i) => {
+      const spd = 96 + i * 13;
+      const span = 720 + lane.offsetWidth + 60;
+      const x = 740 - ((t + i * 3.1) * spd) % span;
+      lane.style.transform = `translateX(${x.toFixed(1)}px)`;
+      lane.style.opacity = (i < 4 ? 0.94 : 0.72);
+    });
+    this.live.querySelector('.dot').style.opacity = (Math.sin(t * 5.2) > 0 ? 1 : 0.25);
+    this.bar.style.opacity = (0.6 + 0.4 * clamp01((t - 1) / 1.2)).toFixed(3);
+    showBeats(this.beats.items, t, C, 34, 0.6);
+  },
+};
+
+/* --- 09 杂志排版 --------------------------------------------------------- */
+S.magazine = {
+  name: '杂志编辑排版',
+  build(host, C) {
+    host.appendChild(el('div', 'mg-paper'));
+    host.appendChild(el('div', 'mg-guide'));
+
+    const head = el('div', 'mg-head');
+    head.innerHTML =
+      `<div class="r"><span class="np">FIELD NOTES</span>` +
+      `<span class="is">${C.brand.issue} / ${C.brand.year}</span></div>` +
+      '<div class="ln"></div><div class="ln2"></div>';
+    host.appendChild(head); this.head = head;
+
+    this.num = el('div', 'mg-num', '01');
+    host.appendChild(this.num);
+
+    this.rule = el('div', 'mg-rule');
+    host.appendChild(this.rule);
+
+    this.cap = el('div', 'mg-cap',
+      `${C.brand.city}<br>${C.brand.unit}<br>— 现场实录`);
+    host.appendChild(this.cap);
+
+    this.beats = mkBeats(host, C, { en: true });
+    skinBeats(this.beats.items, 'mg-tblock');
+  },
+  fit(C) { fitBeats(this.beats.items, 560); },
+  draw(t, C) {
+    const i = showBeats(this.beats.items, t, C, 30, 0.85);
+    this.num.textContent = '0' + (i + 1);
+    const p = ease(clamp01((t - C.beats[i].t0 - 0.2) / 0.9));
+    this.rule.style.width = (180 * p).toFixed(1) + 'px';
+    this.rule.style.opacity = p.toFixed(3);
+    this.num.style.opacity = (0.14 * clamp01((t - 0.5) / 1.2)).toFixed(3);
+    this.head.style.opacity = (0.7 + 0.3 * clamp01((t - 0.3) / 1)).toFixed(3);
+    this.cap.style.opacity = (0.55 + 0.45 * clamp01((t - 1.2) / 1.4)).toFixed(3);
+  },
+};
+
+/* --- 10 极简纪录片 ------------------------------------------------------- */
+S.minimal = {
+  name: '极简纪录片章节',
+  build(host, C) {
+    host.appendChild(el('div', 'mn-veil'));
+
+    const rail = el('div', 'mn-rail');
+    rail.appendChild(el('div', 'fill'));
+    C.beats.forEach((b, i) => {
+      const d = el('div', 'mn-dot');
+      d.style.left = (i * 25) + '%';
+      rail.appendChild(d);
+    });
+    host.appendChild(rail);
+    this.rail = rail;
+    this.fill = rail.querySelector('.fill');
+    this.dots = [...rail.querySelectorAll('.mn-dot')];
+
+    this.t1 = el('div', 'mn-time', '00:00');
+    this.t2 = el('div', 'mn-time2', '00:20');
+    host.appendChild(this.t1); host.appendChild(this.t2);
+
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'mn-tblock');
+  },
+  fit(C) { fitBeats(this.beats.items, 540); },
+  draw(t, C) {
+    const i = showBeats(this.beats.items, t, C, 26, 0.95);
+    const p = clamp01(t / C.duration);
+    this.fill.style.width = (p * 100).toFixed(2) + '%';
+    this.dots.forEach((d, k) => d.classList.toggle('on', p >= (k + 0.02) / C.beats.length));
+    const mm = String(Math.floor(t / 60)).padStart(2, '0');
+    const ss = String(Math.floor(t % 60)).padStart(2, '0');
+    this.t1.textContent = `${mm}:${ss}`;
+  },
+};
+
+/* --- 11 新闻播报台 ------------------------------------------------------- */
+S.news = {
+  name: '新闻播报台',
+  build(host, C) {
+    host.appendChild(el('div', 'nw-bg'));
+    host.appendChild(el('div', 'nw-grid'));
+
+    const mark = el('div', 'nw-mark');
+    mark.innerHTML = '<span class="logo">NEWS</span><span class="ch">' + C.brand.name + ' · 财经观察</span>';
+    host.appendChild(mark); this.mark = mark;
+
+    const live = el('div', 'nw-live', '<span class="dot"></span>LIVE');
+    host.appendChild(live); this.live = live;
+    this.clock = el('div', 'nw-clock', '--:--:--'); host.appendChild(this.clock);
+
+    const bar = el('div', 'nw-bar');
+    bar.innerHTML = '<div class="stripe"></div><div class="body"></div>' +
+                    '<div class="kick">' + C.brand.city + ' · 现场报道</div>';
+    host.appendChild(bar); this.bar = bar;
+
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'nw-tblock');
+  },
+  fit(C) { fitBeats(this.beats.items, 560); },
+  draw(t, C) {
+    showBeats(this.beats.items, t, C, 30, 0.6);
+    this.live.querySelector('.dot').style.opacity = (Math.sin(t * 5) > 0 ? 1 : 0.2);
+    const p2 = (n) => String(n).padStart(2, '0');
+    this.clock.textContent = p2(Math.floor(t / 60)) + ':' + p2(Math.floor(t % 60)) + ':' +
+      p2(Math.floor((t % 1) * 30));
+    this.mark.style.opacity = (0.85 + 0.15 * clamp01((t - 0.3) / 1)).toFixed(3);
+    const e = sp((t - 0.1) / 0.5, 0.7, 16);
+    this.bar.style.transform = `translateY(${((1 - e) * 130).toFixed(1)}px)`;
+  },
+};
+
+/* --- 12 产品发布官网 ----------------------------------------------------- */
+S.product = {
+  name: '产品发布官网',
+  build(host, C) {
+    host.appendChild(el('div', 'pd-bg'));
+    const halo = el('div', 'pd-halo'); host.appendChild(halo); this.halo = halo;
+    const ring = el('div', 'pd-ring'); host.appendChild(ring); this.ring = ring;
+    host.appendChild(el('div', 'pd-brand', C.brand.name + '  ·  RELEASE'));
+
+    const pills = el('div', 'pd-pills');
+    C.keywords.forEach(k => pills.appendChild(el('span', 'pd-pill', k)));
+    host.appendChild(pills); this.pills = pills;
+
+    this.beats = mkBeats(host, C, { en: true });
+    skinBeats(this.beats.items, 'pd-tblock');
+  },
+  fit(C) { fitBeats(this.beats.items, 560); },
+  draw(t, C) {
+    showBeats(this.beats.items, t, C, 36, 0.75);
+    const e = sp((t - 0.2) / 0.7, 0.66, 14);
+    this.halo.style.opacity = (0.6 + 0.4 * Math.abs(Math.sin(t * 1.5))).toFixed(3);
+    this.ring.style.transform = `scale(${(0.9 + 0.1 * e).toFixed(3)}) rotate(${(t * 6).toFixed(1)}deg)`;
+    [...this.pills.children].forEach((p, k) => {
+      const pp = clamp01((t - 1.0 - k * 0.18) / 0.5);
+      p.style.opacity = pp.toFixed(3);
+      p.style.transform = `translateY(${((1 - pp) * 16).toFixed(1)}px)`;
+    });
+  },
+};
+
+/* --- 13 流体玻璃拟态 ----------------------------------------------------- */
+S.glass = {
+  name: '流体玻璃拟态',
+  build(host, C) {
+    host.appendChild(el('div', 'gl-veil'));
+    const blobs = [[-120, -80, 440, 'rgba(116,156,255,.78)'],
+                   [400, 700, 480, 'rgba(255,148,200,.74)'],
+                   [-100, 880, 420, 'rgba(126,234,214,.70)']];
+    this.blobs = blobs.map(([l, tp, s, c]) => {
+      const d = el('div', 'gl-blob');
+      d.style.left = l + 'px'; d.style.top = tp + 'px';
+      d.style.width = s + 'px'; d.style.height = s + 'px';
+      d.style.background = c;
+      host.appendChild(d); return d;
+    });
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'gl-card');
+  },
+  fit(C) { fitBeats(this.beats.items, 500); },
+  draw(t, C) {
+    showBeats(this.beats.items, t, C, 30, 0.7);
+    this.blobs.forEach((b, k) => {
+      const dx = Math.sin(t * 0.5 + k * 2) * 40;
+      const dy = Math.cos(t * 0.42 + k * 1.6) * 34;
+      b.style.transform = `translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;
+    });
+  },
+};
+
+/* --- 14 时间轴进程 ------------------------------------------------------- */
+S.timeline = {
+  name: '时间轴进程',
+  build(host, C) {
+    host.appendChild(el('div', 'tl-veil'));
+    const spine = el('div', 'tl-spine');
+    spine.appendChild(el('div', 'prog'));
+    host.appendChild(spine); this.spine = spine;
+    this.prog = spine.querySelector('.prog');
+
+    const top = 150, bottom = 300, H = 1280 - top - bottom;
+    this.nodes = C.beats.map((b, i) => {
+      const y = top + (i / (C.beats.length - 1)) * H;
+      const n = el('div', 'tl-node'); n.style.top = (y - 9) + 'px';
+      host.appendChild(n);
+      const cap = el('div', 'tl-cap', String(i + 1).padStart(2, '0') + ' / ' + b.tag);
+      cap.style.top = (y - 13) + 'px';
+      host.appendChild(cap);
+      return { n, cap };
+    });
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'tl-tblock');
+  },
+  fit(C) { fitBeats(this.beats.items, 470); },
+  draw(t, C) {
+    showBeats(this.beats.items, t, C, 28, 0.66);
+    const p = clamp01(t / C.duration);
+    this.prog.style.height = (p * 100).toFixed(2) + '%';
+    this.nodes.forEach((o, k) => {
+      const on = p >= (k / C.beats.length) - 0.001;
+      o.n.classList.toggle('on', on);
+      o.cap.style.opacity = on ? '1' : '0.45';
+    });
+  },
+};
+
+/* --- 15 金句名言卡 ------------------------------------------------------- */
+S.quote = {
+  name: '金句名言卡',
+  build(host, C) {
+    host.appendChild(el('div', 'qt-veil'));
+    host.appendChild(el('div', 'qt-mark', '\u201C'));
+    host.appendChild(el('div', 'qt-rule'));
+    host.appendChild(el('div', 'qt-sign', C.brand.city + ' · ' + C.brand.name));
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'qt-tblock');
+  },
+  fit(C) { fitBeats(this.beats.items, 520); },
+  draw(t, C) {
+    showBeats(this.beats.items, t, C, 36, 0.95);
+  },
+};
+
+/* --- 16 播客声波 --------------------------------------------------------- */
+S.podcast = {
+  name: '播客声波',
+  build(host, C) {
+    host.appendChild(el('div', 'pc-bg'));
+
+    const cov = el('div', 'pc-cover',
+      '<svg class="mic" viewBox="0 0 100 100">' +
+      '<rect x="37" y="12" width="26" height="46" rx="13" fill="rgba(255,255,255,.95)"/>' +
+      '<path d="M26 48 a24 24 0 0 0 48 0" fill="none" stroke="rgba(255,255,255,.95)" ' +
+      'stroke-width="7" stroke-linecap="round"/>' +
+      '<rect x="46" y="72" width="8" height="14" rx="3" fill="rgba(255,255,255,.95)"/></svg>');
+    host.appendChild(cov); this.cov = cov;
+
+    const meta = el('div', 'pc-meta');
+    meta.innerHTML = '<div class="t">AI 营销现场</div><div class="s">EP.01 · ' + C.brand.city + '</div>';
+    host.appendChild(meta); this.meta = meta;
+
+    const wave = el('div', 'pc-wave');
+    this.bars = [];
+    for (let i = 0; i < 44; i++) {
+      const b = document.createElement('i');
+      b.dataset.ph = (((i * 37) % 100) / 100).toFixed(3);
+      wave.appendChild(b); this.bars.push(b);
+    }
+    host.appendChild(wave); this.wave = wave;
+
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'pc-tblock');
+  },
+  fit(C) { fitBeats(this.beats.items, 560); },
+  draw(t, C) {
+    showBeats(this.beats.items, t, C, 32, 0.7);
+    this.bars.forEach(b => {
+      const ph = parseFloat(b.dataset.ph);
+      b.style.height = (16 + 90 * Math.abs(Math.sin(t * 4.2 + ph * 6.3))).toFixed(1) + 'px';
+      b.style.opacity = (0.5 + 0.5 * Math.abs(Math.sin(t * 3 + ph * 5))).toFixed(3);
+    });
+    this.cov.style.transform = `scale(${(1 + 0.02 * Math.sin(t * 2)).toFixed(4)})`;
+  },
+};
+
+/* --- 17 旅行 vlog 贴纸 --------------------------------------------------- */
+S.travel = {
+  name: '旅行 vlog 贴纸',
+  build(host, C) {
+    host.appendChild(el('div', 'tv-veil'));
+
+    const polars = [[56, 150, -6], [452, 206, 5], [116, 742, -4]];
+    this.polars = polars.map(([l, tp, r]) => {
+      const d = el('div', 'tv-polar');
+      d.style.left = l + 'px'; d.style.top = tp + 'px';
+      d.style.width = '206px'; d.style.height = '252px';
+      d.style.transform = `rotate(${r}deg)`;
+      d.appendChild(el('div', 'ph'));
+      host.appendChild(d); return d;
+    });
+
+    const tags = [[306, 412, '#33A2FF', '宝安'], [438, 640, '#FF7A59', '打卡']];
+    this.tags = tags.map(([l, tp, c, tx]) => {
+      const d = el('div', 'tv-tag', tx);
+      d.style.left = l + 'px'; d.style.top = tp + 'px'; d.style.background = c;
+      host.appendChild(d); return d;
+    });
+
+    this.tickets = [[406, 700], [46, 886]].map(([l, tp]) => {
+      const d = el('div', 'tv-ticket');
+      d.style.left = l + 'px'; d.style.top = tp + 'px';
+      d.style.width = '244px'; d.style.height = '96px';
+      host.appendChild(d); return d;
+    });
+
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'tv-tblock');
+  },
+  fit(C) { fitBeats(this.beats.items, 540); },
+  draw(t, C) {
+    showBeats(this.beats.items, t, C, 34, 0.66);
+    const rots = [-6, 5, -4];
+    this.polars.forEach((d, k) => {
+      const p = clamp01((t - 0.8 - k * 0.35) / 0.6);
+      d.style.opacity = p.toFixed(3);
+      d.style.transform =
+        `rotate(${(rots[k] + Math.sin(t * 1.2 + k) * 1.6).toFixed(2)}deg) scale(${(0.94 + 0.06 * p).toFixed(3)})`;
+    });
+    this.tags.forEach((d, k) => d.style.opacity = (0.7 + 0.3 * Math.sin(t * 2 + k * 1.4)).toFixed(3));
+  },
+};
+
+/* --- 18 工程蓝图 --------------------------------------------------------- */
+S.blueprint = {
+  name: '工程蓝图',
+  build(host, C) {
+    host.appendChild(el('div', 'bp-bg'));
+    host.appendChild(el('div', 'bp-grid'));
+    host.appendChild(el('div', 'bp-frame'));
+    host.appendChild(el('div', 'bp-cap', 'DWG NO. ' + C.brand.issue + ' · SCALE 1:1'));
+    host.appendChild(el('div', 'bp-meta',
+      'REV ' + C.brand.year + ' · ' + C.brand.unit + ' · ' + C.brand.city));
+
+    this.dims = [['720 px', 64, 306], ['1280 px', 64, 1112]].map(([tx, l, tp]) => {
+      const d = el('div', 'bp-dim', tx);
+      d.style.left = l + 'px'; d.style.top = tp + 'px';
+      host.appendChild(d); return d;
+    });
+
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'bp-tblock');
+  },
+  fit(C) { fitBeats(this.beats.items, 540); },
+  draw(t, C) {
+    showBeats(this.beats.items, t, C, 28, 0.72);
+    this.dims.forEach((d, k) => d.style.opacity = (0.55 + 0.35 * Math.abs(Math.sin(t * 1.8 + k))).toFixed(3));
+  },
+};
+
+/* --- 19 渐变大字现代 ----------------------------------------------------- */
+S.gradient = {
+  name: '渐变大字现代',
+  build(host, C) {
+    host.appendChild(el('div', 'gd-bg'));
+    const mesh = el('div', 'gd-mesh'); host.appendChild(mesh); this.mesh = mesh;
+    host.appendChild(el('div', 'gd-veil'));
+    this.beats = mkBeats(host, C, { en: true });
+    skinBeats(this.beats.items, 'gd-tblock');
+  },
+  fit(C) { fitBeats(this.beats.items, 600); },
+  draw(t, C) {
+    showBeats(this.beats.items, t, C, 40, 0.8);
+    this.mesh.style.transform =
+      `scale(${(1.03 + 0.03 * Math.sin(t * 0.8)).toFixed(4)}) rotate(${(Math.sin(t * 0.5) * 1.5).toFixed(2)}deg)`;
+  },
+};
+
+/* --- 20 信息卡片流 ------------------------------------------------------- */
+S.card = {
+  name: '信息卡片流',
+  build(host, C) {
+    host.appendChild(el('div', 'cd-veil'));
+
+    const head = el('div', 'cd-head');
+    head.innerHTML = '<div class="av"></div><div class="nm"><div class="a">' + C.brand.name +
+      '</div><div class="b">' + C.brand.city + ' · 已认证</div></div>';
+    host.appendChild(head); this.head = head;
+
+    const chips = el('div', 'cd-chips');
+    C.keywords.forEach(k => chips.appendChild(el('span', 'cd-chip', '#' + k)));
+    host.appendChild(chips); this.chips = chips;
+
+    this.beats = mkBeats(host, C, {});
+    skinBeats(this.beats.items, 'cd-card');
+    this.idxs = this.beats.items.map((it, k) => {
+      const d = el('div', 'cd-idx', String(k + 1));
+      it.box.querySelector('.cd-card').appendChild(d);
+      return d;
+    });
+  },
+  fit(C) { fitBeats(this.beats.items, 520); },
+  draw(t, C) {
+    const i = showBeats(this.beats.items, t, C, 30, 0.7);
+    this.idxs.forEach((d, k) => d.style.opacity = (k === i ? '1' : '0'));
+  },
+};
+
+/* ================= shared insert-image layer ============================ */
+/* One implementation, used by every skin: shows CFG.images[k] from its own
+   timestamp until the next one, inside a soft safe-area card, so the spoken
+   face in the middle of the frame is never covered. */
+/* 位置用「锚点 + 边距」描述，卡片尺寸变了也自动贴合，不用重算坐标。
+   竖屏口播里标题卡永远在画面中下部，所以默认位置选在人物两侧的腰部空档，
+   既不压脸也不压标题。 */
+const IMG_ANCHOR = {
+  tl: [0, 0], tr: [1, 0], bl: [0, 1], br: [1, 1],
+  ml: [0, 0.30], mr: [1, 0.30],
+  top: [0.5, 0], bottom: [0.5, 1], center: [0.5, 0.5],
+};
+const IMG_MARGIN = 18;
+
+function imgXY(pos, w, h) {
+  const a = IMG_ANCHOR[pos] || IMG_ANCHOR.ml;
+  let x = a[0] * (STAGE_W - w);
+  let y = a[1] * (STAGE_H - h);
+  if (a[0] === 0) x += IMG_MARGIN;
+  if (a[0] === 1) x -= IMG_MARGIN;
+  if (a[1] === 0) y += IMG_MARGIN;
+  if (a[1] === 1) y -= IMG_MARGIN;
+  return [Math.round(x), Math.round(y)];
+}
+
+function mkImgLayer(host, C) {
+  /* 每套模板可以覆盖全局默认（位置 / 尺寸 / 透明度），
+     因为各套版面不同 —— 标题在下的该走上方，顶部有标题栏的就得另想办法。 */
+  const per = ((C.styles || []).find(s => s.id === STYLE) || {}).imageLayer || {};
+  const cfg = Object.assign({}, C.imageLayer || {}, per);
+  const plan = (Array.isArray(C.images) ? C.images : []).filter(x => x && x.file);
+  if (cfg.enabled === false || !plan.length) return null;
+
+  const wrap = el('div', 'g-imglayer');
+  const sz = (Array.isArray(cfg.size) && cfg.size.length === 2)
+    ? cfg.size.map(Number) : [180, 240];
+  /* 优先用逐套微调好的绝对落点（templates.json 里算出来的），
+     没有才退回锚点名。 */
+  const pos = (Array.isArray(cfg.xy) && cfg.xy.length === 2)
+    ? [Math.round(Number(cfg.xy[0])), Math.round(Number(cfg.xy[1]))]
+    : imgXY(cfg.pos || 'bl', sz[0], sz[1]);
+  const cards = plan.map(p => {
+    const c = el('div', 'g-imgcard');
+    const im = el('img');
+    im.src = p.file;
+    const v = p.variant || {};
+    im.style.objectPosition = v.pos || '50% 50%';
+    let tr = 'scale(' + Number(v.zoom || 1).toFixed(3) + ')';
+    if (v.flip) tr += ' scaleX(-1)';
+    im.style.transform = tr;
+    im.onerror = () => { c.style.display = 'none'; c.dataset.dead = '1'; };
+    c.appendChild(im);
+    c.style.width = sz[0] + 'px';
+    c.style.height = sz[1] + 'px';
+    c.style.left = pos[0] + 'px';
+    c.style.top = pos[1] + 'px';
+    wrap.appendChild(c);
+    return c;
+  });
+  host.appendChild(wrap);
+
+  const starts = plan.map(p => Math.max(0, Number(p.t) || 0));
+  if (starts.length) starts[0] = 0;
+  return { cards, starts, dur: Number(C.duration) || 20,
+           base: Number(cfg.opacity) > 0 ? Number(cfg.opacity) : 0.88 };
+}
+
+function drawImgLayer(L, t) {
+  if (!L) return;
+  const { cards, starts, dur, base } = L;
+  for (let k = 0; k < cards.length; k++) {
+    const c = cards[k];
+    if (c.dataset.dead) continue;
+    const t0 = starts[k];
+    const t1 = k + 1 < starts.length ? starts[k + 1] : dur;
+    let o = 0, local = 0;
+    if (t >= t0 && t < t1) {
+      const span = Math.max(0.12, t1 - t0);
+      o = Math.min(clamp01((t - t0) / 0.5), clamp01((t1 - t) / 0.5));
+      local = (t - t0) / span;
+    }
+    if (o <= 0.004) { if (c.style.display !== 'none') c.style.display = 'none'; continue; }
+    c.style.display = 'block';
+    const sc = 1.02 + 0.07 * local;
+    const dy = (0.5 - local) * 10;
+    c.style.opacity = (o * base).toFixed(3);
+    c.style.transform = 'translate3d(0,' + dy.toFixed(2) + 'px,0) scale(' + sc.toFixed(4) + ')';
+  }
+}
+
+/* ============================== bootstrap =============================== */
+const T = S[STYLE];
+if (!T) throw new Error('unknown template: ' + STYLE);
+
+function boot() {
+  const layer = el('div', 'g-layer');
+  layer.id = 'L_' + STYLE;
+  stage.appendChild(layer);
+  T.host = layer;
+  T.build(layer, CFG);
+  const IMG = mkImgLayer(stage, CFG);
+  window.render = function (t) { T.draw(t, CFG); drawImgLayer(IMG, t); };
+  document.fonts.ready.then(() => {
+    if (T.fit) T.fit(CFG);
+    window.ready = true;
+  });
+}
+
+boot();</script>
+</body>
+</html>

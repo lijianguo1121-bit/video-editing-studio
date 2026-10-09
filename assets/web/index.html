@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 剪辑工作流 · 上传 → 选号 → 出片</title>
+<style>
+  :root{
+    --bg:#0A0D12; --panel:#12161D; --panel2:#0E1218; --line:#242B36; --line2:#33404F;
+    --fg:#E8EEF5; --dim:#8A97A8; --accent:#4FD1E0; --accent2:#9C6BFF;
+    --ok:#4ADE80; --warn:#FBBF24; --bad:#F87171;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(90% 50% at 12% -6%, rgba(79,209,224,.10), transparent 60%),
+      radial-gradient(80% 46% at 96% 4%, rgba(156,107,255,.10), transparent 62%),
+      var(--bg);
+    color:var(--fg);font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;padding-bottom:112px;
+  }
+  .wrap{max-width:1240px;margin:0 auto;padding:0 34px;}
+  header{padding:32px 0 20px;border-bottom:1px solid var(--line);margin-bottom:22px;}
+  h1{font-size:25px;font-weight:800;letter-spacing:.4px;}
+  h1 span{color:var(--accent);}
+  .sub{margin-top:9px;font-size:13.5px;color:var(--dim);line-height:1.75;}
+  .sub b{color:#CFE0FF;font-weight:600;}
+  .flow{margin-top:14px;display:flex;gap:9px;flex-wrap:wrap;}
+  .flow i{
+    font-style:normal;font-size:12.5px;color:#A9BACD;padding:6px 13px;border-radius:99px;
+    background:rgba(79,209,224,.08);border:1px solid rgba(79,209,224,.26);
+    font-family:"SF Mono",Menlo,monospace;
+  }
+  section{margin-bottom:24px;}
+  h2{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:9px;}
+  h2 em{
+    font-style:normal;width:22px;height:22px;border-radius:7px;background:var(--accent);
+    color:#04222a;font-size:12.5px;font-weight:900;display:flex;align-items:center;justify-content:center;
+    font-family:"SF Mono",Menlo,monospace;
+  }
+  h2 small{font-weight:400;font-size:12.5px;color:var(--dim);margin-left:2px;}
+
+  /* ---- 上传 ---- */
+  #drop{
+    border:1.5px dashed var(--line2);border-radius:16px;background:var(--panel);
+    padding:34px;text-align:center;cursor:pointer;transition:.18s;
+  }
+  #drop:hover,#drop.on{border-color:var(--accent);background:rgba(79,209,224,.05);}
+  #drop .big{font-size:16px;font-weight:700;margin-bottom:7px;}
+  #drop .sm{font-size:12.5px;color:var(--dim);}
+  #fileInfo{display:none;margin-top:14px;gap:16px;align-items:center;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 16px;}
+  #fileInfo.on{display:flex;}
+  #fileInfo video{width:76px;height:132px;border-radius:9px;background:#000;object-fit:cover;}
+  #fileInfo .meta{font-size:13px;line-height:1.85;}
+  #fileInfo .meta b{color:#CFE0FF;}
+  .tagline{font-size:12px;color:var(--dim);font-family:"SF Mono",Menlo,monospace;}
+
+  /* ---- 模板网格 ---- */
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));}
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s;position:relative;
+  }
+  .card:hover{transform:translateY(-3px);border-color:var(--line2);box-shadow:0 16px 34px rgba(0,0,0,.44);}
+  .card.sel{border-color:var(--accent);
+    box-shadow:0 0 0 2px rgba(79,209,224,.34),0 16px 38px rgba(0,0,0,.5);}
+  .thumb{position:relative;aspect-ratio:9/16;background:var(--panel2);overflow:hidden;}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .ph{
+    width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+    font-size:38px;font-weight:900;color:rgba(255,255,255,.22);
+    font-family:"SF Mono",Menlo,monospace;
+    background:linear-gradient(150deg,#1b2230,#0d1118 60%,#161c27);
+  }
+  .num{
+    position:absolute;left:8px;top:8px;min-width:36px;height:34px;padding:0 7px;border-radius:10px;
+    background:rgba(8,11,16,.76);border:1px solid rgba(255,255,255,.18);
+    display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;
+    color:#fff;backdrop-filter:blur(6px);font-family:"SF Mono",Menlo,monospace;
+  }
+  .chk{
+    position:absolute;right:8px;top:8px;width:23px;height:23px;border-radius:50%;
+    border:1.6px solid rgba(255,255,255,.42);background:rgba(8,11,16,.5);
+    display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;
+  }
+  .card.sel .chk{background:var(--accent);border-color:var(--accent);color:#04222a;font-weight:900;}
+  .cname{padding:9px 11px 10px;font-size:12.5px;font-weight:600;line-height:1.4;}
+  .cname i{display:block;font-style:normal;font-size:11px;color:var(--dim);margin-top:3px;font-weight:400;}
+
+  /* ---- 表单 ---- */
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+  .row label{font-size:13px;color:#C6D3E2;display:flex;align-items:center;gap:7px;}
+  textarea,input[type=text]{
+    width:100%;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+    color:var(--fg);padding:11px 13px;font-size:13px;font-family:inherit;resize:vertical;
+  }
+  textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent);}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .hint{font-size:11.5px;color:var(--dim);margin-top:6px;line-height:1.6;}
+  .seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden;}
+  .seg button{
+    background:none;border:0;color:var(--dim);padding:9px 15px;font-size:12.5px;cursor:pointer;
+    font-family:inherit;
+  }
+  .seg button.on{background:rgba(79,209,224,.16);color:var(--accent);font-weight:700;}
+  details{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;}
+  summary{cursor:pointer;font-size:13.5px;font-weight:600;}
+  details .inner{margin-top:14px;}
+
+  /* ---- 底栏 / 进度 ---- */
+  footer{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;padding:13px 34px;
+    background:rgba(10,13,18,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);
+  }
+  footer .bar{max-width:1240px;margin:0 auto;display:flex;align-items:center;gap:16px;}
+  .picked{font-size:13px;color:var(--dim);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .picked b{color:var(--accent);font-family:"SF Mono",Menlo,monospace;}
+  button.go{
+    background:linear-gradient(135deg,var(--accent),#3FB6C9);color:#04222a;border:0;border-radius:12px;
+    padding:13px 30px;font-size:14.5px;font-weight:800;cursor:pointer;font-family:inherit;
+    transition:.16s;
+  }
+  button.go:disabled{opacity:.38;cursor:not-allowed;}
+  button.go:not(:disabled):hover{filter:brightness(1.08);transform:translateY(-1px);}
+
+  .prog{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:17px;}
+  .prog.on{display:block;}
+  .ptrack{height:8px;border-radius:99px;background:#1B222C;overflow:hidden;margin:12px 0 11px;}
+  .pfill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));
+    transition:width .4s ease;}
+  .pmain{font-size:13.5px;font-weight:600;}
+  .pmeta{font-size:12px;color:var(--dim);margin-top:9px;display:flex;gap:8px;flex-wrap:wrap;}
+  .pill{font-size:11.5px;padding:4px 10px;border-radius:99px;background:#1A2029;border:1px solid var(--line2);
+    font-family:"SF Mono",Menlo,monospace;}
+  .pill.done{color:var(--ok);border-color:rgba(74,222,128,.4);}
+  .pill.run{color:var(--accent);border-color:rgba(79,209,224,.45);}
+  .pill.fail{color:var(--bad);border-color:rgba(248,113,113,.45);}
+
+  .outs{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));}
+  .out{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .out video{width:100%;aspect-ratio:9/16;background:#000;display:block;}
+  .out .foot{padding:11px 13px;}
+  .out .nm{font-size:12.5px;font-weight:700;margin-bottom:5px;}
+  .out .qa{font-size:11.5px;color:var(--dim);font-family:"SF Mono",Menlo,monospace;}
+  .out .qa b{color:var(--ok);}
+  .out a{
+    display:block;margin-top:9px;text-align:center;text-decoration:none;font-size:12.5px;font-weight:700;
+    padding:9px;border-radius:9px;background:rgba(79,209,224,.14);color:var(--accent);
+    border:1px solid rgba(79,209,224,.3);
+  }
+  .toast{
+    position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:60;
+    background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.5);color:#FECACA;
+    padding:11px 20px;border-radius:12px;font-size:13px;display:none;
+  }
+  .toast.on{display:block;}
+  @media(max-width:720px){ .wrap{padding:0 18px;} footer{padding:11px 18px;} .two{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>AI 剪辑工作流 · <span>上传 → 选号 → 出片</span></h1>
+    <p class="sub">
+      把口播视频丢进来，勾一个模板序号，剩下全自动：<b>自动配乐</b>、<b>自动按文案配图</b>、
+      <b>自动套剪辑模板</b>、<b>自动加动效</b>。<b>你的原声一个字都不会变</b>，配乐自动压在人声下面。
+    </p>
+    <div class="flow">
+      <i>1 上传视频</i><i>2 填文案（可选）</i><i>3 勾模板序号</i><i>4 开始生成</i>
+      <i>每 30 秒自动配 3-5 张图</i><i>原声保留 100%</i>
+    </div>
+  </header>
+
+  <!-- 1 上传 -->
+  <section>
+    <h2><em>1</em>上传口播视频 <small>mp4 / mov，竖屏横屏都行</small></h2>
+    <div id="drop">
+      <div class="big">拖视频到这里，或点击选择文件</div>
+      <div class="sm">建议 9:16 竖屏；横屏会自动加虚化底衬，不裁画面</div>
+    </div>
+    <input type="file" id="file" accept="video/*" style="display:none">
+    <div id="fileInfo">
+      <video id="pv" muted playsinline></video>
+      <div class="meta">
+        <div><b id="fname">—</b></div>
+        <div class="tagline" id="fmeta">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 内容 -->
+  <section>
+    <h2><em>2</em>文案与品牌 <small>不填也能跑，会自动均分节拍</small></h2>
+    <details>
+      <summary>展开填写（口播文案 / 分镜标题 / 品牌文字）</summary>
+      <div class="inner">
+        <div class="two">
+          <div>
+            <label style="margin-bottom:7px;display:block">分镜标题（一行一条，最准）</label>
+            <textarea id="titles" rows="5" placeholder="深圳 · 宝安&#10;OPC-AID 已成立&#10;拆解营销全链路&#10;评论回复 666&#10;让 AI 营销落地"></textarea>
+            <div class="hint">填了这个就不看下面的文案，画面标题块直接用你写的这几行。</div>
+          </div>
+          <div>
+            <label style="margin-bottom:7px;display:block">口播文案（整段粘进来）</label>
+            <textarea id="script" rows="5" placeholder="中国有个地方叫深圳，那里有个区叫宝安……（按标点自动切句分拍）"></textarea>
+            <div class="hint">会自动按句号切分、按字数配比时长，并据此生成配图取材点。</div>
+          </div>
+        </div>
+        <div class="two" style="margin-top:14px">
+          <div>
+            <label style="margin-bottom:7px;display:block">品牌名 / 城市 / 口号</label>
+            <div class="row" style="gap:8px">
+              <input type="text" id="bname" placeholder="OPC-AID" style="flex:1;min-width:120px">
+              <input type="text" id="bcity" placeholder="深圳 宝安" style="flex:1;min-width:120px">
+            </div>
+            <input type="text" id="bslogan" placeholder="让 AI 营销落地" style="margin-top:8px">
+          </div>
+          <div>
+            <label style="margin-bottom:7px;display:block">关键词（逗号分隔，画面标签用）</label>
+            <input type="text" id="kw" placeholder="获客成本, 内容产能, 转化率">
+          </div>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- 3 模板 -->
+  <section>
+    <h2><em>3</em>勾选剪辑模板序号 <small>可多选，选几套出几条成片</small></h2>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <!-- 4 选项 -->
+  <section>
+    <h2><em>4</em>配图与动效</h2>
+    <div class="row" style="gap:22px">
+      <label><input type="checkbox" id="imgs" checked> 自动按文案配图</label>
+      <div class="row" style="gap:9px">
+        <span style="font-size:13px;color:#C6D3E2">配图位置</span>
+        <div class="seg" id="pos">
+          <button data-v="auto" class="on">自动避让</button>
+          <button data-v="tl">左上</button>
+          <button data-v="tr">右上</button>
+          <button data-v="ml">左中</button>
+          <button data-v="mr">右中</button>
+          <button data-v="bl">左下</button>
+          <button data-v="br">右下</button>
+        </div>
+      </div>
+    </div>
+    <div class="hint" style="margin-top:9px">
+      配图默认走内置图库（每套模板 3 张）；不足的会自动用不同裁切补位。
+      若要用 AI 为这条视频单独画的图，生成后把图放进任务目录的 <code>images/</code> 再重跑即可。
+    </div>
+  </section>
+
+  <!-- 进度 -->
+  <section>
+    <h2><em>5</em>生成进度</h2>
+    <div class="prog" id="prog">
+      <div class="pmain" id="pmain">准备中…</div>
+      <div class="ptrack"><div class="pfill" id="pfill"></div></div>
+      <div class="pmeta" id="pmeta"></div>
+    </div>
+    <div class="outs" id="outs" style="margin-top:16px"></div>
+  </section>
+</div>
+
+<footer>
+  <div class="bar">
+    <div class="picked" id="picked">还没选模板</div>
+    <button class="go" id="go" disabled>开始生成</button>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+let TPL = [], PICK = new Set(), UP = null, JOB = null, TIMER = null, POS = 'auto';
+
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 3200);
+}
+
+/* ---------- 模板列表 ---------- */
+// 缩略图缺失时的占位块（轻量安装没带缩略图也不会出现破图）
+window.__ph = function (img) {
+  const d = document.createElement('div');
+  d.className = 'ph';
+  d.textContent = (img.closest('.thumb')?.querySelector('.num')?.textContent) || '—';
+  return d;
+};
+fetch('/api/templates').then(r => r.json()).then(d => {
+  TPL = d.templates;
+  const g = $('#grid');
+  TPL.forEach(t => {
+    const c = document.createElement('div');
+    c.className = 'card'; c.dataset.id = t.id;
+    const num = String(t.num).padStart(2, '0');
+    const media = t.thumb
+      ? '<img loading="lazy" src="' + t.thumb + '" alt="" onerror="this.replaceWith(window.__ph(this))">'
+      : '<div class="ph">' + num + '</div>';
+    c.innerHTML =
+      '<div class="thumb">' + media +
+      '<div class="num">' + num + '</div>' +
+      '<div class="chk">✓</div></div>' +
+      '<div class="cname">' + t.name + '<i>' + t.group + '</i></div>';
+    c.onclick = () => {
+      if (PICK.has(t.id)) PICK.delete(t.id); else PICK.add(t.id);
+      c.classList.toggle('sel', PICK.has(t.id));
+      sync();
+    };
+    g.appendChild(c);
+  });
+  const b = d.brand || {};
+  $('#bname').placeholder = b.name || '品牌名';
+  $('#bcity').placeholder = b.city || '城市';
+  $('#bslogan').placeholder = b.slogan || '口号';
+  if (d.keywords && d.keywords.length) $('#kw').placeholder = d.keywords.join(', ');
+});
+
+function sync(){
+  const go = $('#go'), p = $('#picked');
+  go.disabled = !(UP && PICK.size);
+  if (!PICK.size) { p.textContent = '还没选模板'; return; }
+  const nums = TPL.filter(t => PICK.has(t.id)).map(t => String(t.num).padStart(2, '0'));
+  p.innerHTML = '已选 <b>' + nums.join('、') + '</b> 号 · 共 ' + nums.length + ' 套，将出 ' +
+                nums.length + ' 条成片';
+}
+
+/* ---------- 上传 ---------- */
+const drop = $('#drop'), fileInput = $('#file');
+drop.onclick = () => fileInput.click();
+fileInput.onchange = () => fileInput.files[0] && upload(fileInput.files[0]);
+['dragenter','dragover'].forEach(e => drop.addEventListener(e, ev => {
+  ev.preventDefault(); drop.classList.add('on');
+}));
+['dragleave','drop'].forEach(e => drop.addEventListener(e, ev => {
+  ev.preventDefault(); drop.classList.remove('on');
+}));
+drop.addEventListener('drop', ev => {
+  const f = ev.dataTransfer.files[0]; if (f) upload(f);
+});
+
+async function upload(f){
+  drop.querySelector('.big').textContent = '正在上传…';
+  try {
+    const r = await fetch('/api/upload?name=' + encodeURIComponent(f.name), {method:'POST', body:f});
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    UP = d;
+    $('#fname').textContent = d.name;
+    $('#fmeta').textContent = d.duration.toFixed(2) + 's · ' + d.width + '×' + d.height +
+                              ' · ' + (d.hasAudio ? '含音轨' : '无音轨') + ' · ' +
+                              (d.size/1048576).toFixed(1) + 'MB';
+    $('#pv').src = d.url;
+    $('#fileInfo').classList.add('on');
+    drop.querySelector('.big').textContent = '换一个视频';
+    drop.querySelector('.sm').textContent = '已就绪，继续往下勾模板序号';
+  } catch (e) {
+    toast('上传失败：' + e.message);
+    drop.querySelector('.big').textContent = '拖视频到这里，或点击选择文件';
+  }
+  sync();
+}
+
+/* ---------- 配图位置 ---------- */
+$('#pos').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  [...$('#pos').children].forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); POS = b.dataset.v;
+};
+
+/* ---------- 开始生成 ---------- */
+$('#go').onclick = async () => {
+  if (!UP || !PICK.size) return;
+  const payload = {
+    uploadId: UP.uploadId,
+    styles: TPL.filter(t => PICK.has(t.id)).map(t => t.id),
+    script: $('#script').value.trim(),
+    titles: $('#titles').value.split('\n').map(s => s.trim()).filter(Boolean),
+    brand: { name: $('#bname').value.trim(), city: $('#bcity').value.trim(),
+             slogan: $('#bslogan').value.trim() },
+    keywords: $('#kw').value.split(/[,，]/).map(s => s.trim()).filter(Boolean),
+    images: $('#imgs').checked,
+    imagePos: POS,
+  };
+  $('#go').disabled = true; $('#go').textContent = '提交中…';
+  try {
+    const r = await fetch('/api/jobs', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    JOB = d.jobId;
+    $('#prog').classList.add('on');
+    $('#outs').innerHTML = '';
+    poll();
+    TIMER = setInterval(poll, 1200);
+  } catch (e) {
+    toast('提交失败：' + e.message);
+    $('#go').disabled = false;
+  } finally {
+    $('#go').textContent = '开始生成';
+    sync();
+  }
+};
+
+const STEP_NAME = {queued:'排队中', init:'初始化', probe:'探测视频', plan:'自动分节拍与配图',
+  base:'统一画面规格', music:'生成配乐', render:'渲染动效帧', muxing:'合成音画', done:'完成'};
+const ST_NAME = {render:'渲染', rendering:'渲染', muxing:'合成', done:'完成', fail:'失败'};
+
+async function poll(){
+  if (!JOB) return;
+  const r = await fetch('/api/jobs/' + JOB);
+  const s = await r.json();
+  if (s.error) return;
+
+  $('#pmain').textContent = (STEP_NAME[s.step] || s.step || '处理中') +
+    (s.message ? ' · ' + s.message : '') + '  ' + (s.pct || 0) + '%';
+  $('#pfill').style.width = (s.pct || 0) + '%';
+
+  const meta = [];
+  if (s.elapsed) meta.push('<span class="pill">已用 ' + s.elapsed + 's</span>');
+  if (s.queuedAhead) meta.push('<span class="pill">前面还有 ' + s.queuedAhead + ' 个任务</span>');
+  Object.keys(s.styles || {}).forEach(k => {
+    const v = s.styles[k];
+    const cls = v.state === 'done' ? 'done' : (v.state === 'fail' ? 'fail' : 'run');
+    meta.push('<span class="pill ' + cls + '">' + k + ' · ' +
+              (ST_NAME[v.state] || v.state) + (v.note ? ' · ' + v.note : '') + '</span>');
+  });
+  $('#pmeta').innerHTML = meta.join('');
+
+  if (s.state === 'done' && s.outputs && s.outputs.length && !$('#outs').dataset.done) {
+    $('#outs').dataset.done = '1';
+    clearInterval(TIMER);
+    $('#outs').innerHTML = s.outputs.map(o => {
+      const keep = (o.voice_keep == null) ? '—' : (o.voice_keep * 100).toFixed(1) + '%';
+      return '<div class="out"><video controls preload="metadata" src="' + o.url + '"></video>' +
+        '<div class="foot"><div class="nm">' + o.name + '</div>' +
+        '<div class="qa">时长 ' + o.duration.toFixed(2) + 's · 原声保留 <b>' + keep + '</b>' +
+        (o.loudness ? ' · ' + o.loudness.toFixed(1) + ' LUFS' : '') + '</div>' +
+        '<a href="' + o.download + '">下载成片</a></div></div>';
+    }).join('');
+  }
+  if (s.state === 'failed') {
+    clearInterval(TIMER);
+    toast('生成失败：' + (s.message || '未知错误') + '（详细日志见任务目录 log.txt）');
+    $('#go').disabled = false;
+  }
+}
+sync();
+</script>
+</body>
+</html>

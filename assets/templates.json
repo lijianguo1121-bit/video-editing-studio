@@ -1,0 +1,471 @@
+{
+  "_note": "剪辑模板库配置。20 套视觉层共用这一份；换口播/换文案只需改这里，不用动代码。metrics 与 danmu 是占位示例，发布前务必替换为真实数据与真实评论。",
+  "duration": 20.067,
+  "brand": {
+    "name": "OPC-AID",
+    "city": "深圳 宝安",
+    "unit": "FIELD UNIT 01",
+    "issue": "NO.01",
+    "year": "2026",
+    "slogan": "让 AI 营销落地"
+  },
+  "beats": [
+    {
+      "t0": 0.3,
+      "t1": 3.3,
+      "tag": "起点",
+      "title": "深圳 · 宝安",
+      "sub": "中国有个地方叫深圳",
+      "en": "SHENZHEN · BAO'AN",
+      "img": "一座南方沿海城市的清晨天际线，玻璃幕墙写字楼群，前景是城市绿化带，暖金色晨光"
+    },
+    {
+      "t0": 3.3,
+      "t1": 6.9,
+      "tag": "状态",
+      "title": "OPC-AID 已成立",
+      "sub": "深圳 宝安 · 项目启动",
+      "en": "PROJECT LAUNCHED",
+      "img": "一间明亮现代的联合办公空间，长桌与屏幕，团队刚开始工作的空镜，绿植点缀"
+    },
+    {
+      "t0": 6.9,
+      "t1": 12.5,
+      "tag": "主题",
+      "title": "拆解营销全链路",
+      "sub": "内容 → 流量 → 转化",
+      "en": "FULL-FUNNEL BREAKDOWN",
+      "img": "营销漏斗概念插画，从内容到流量到转化的三段结构，简洁几何图形，深蓝与薄荷绿"
+    },
+    {
+      "t0": 12.5,
+      "t1": 17.1,
+      "tag": "行动",
+      "title": "评论回复 666",
+      "sub": "深圳 宝安 · OPC-AID",
+      "en": "COMMENT 666",
+      "img": "手机屏幕特写，社交平台评论区界面，手指即将点下回复按钮，界面简洁现代"
+    },
+    {
+      "t0": 17.1,
+      "t1": 20.07,
+      "tag": "收尾",
+      "title": "让 AI 营销落地",
+      "sub": "加入实战案例",
+      "en": "LET IT LAND",
+      "img": "实体店经营场景与数字屏幕并置，线上线下一体的获客画面，明亮有希望的氛围"
+    }
+  ],
+  "keywords": [
+    "获客成本",
+    "内容产能",
+    "转化率",
+    "AI 营销"
+  ],
+  "metrics": [
+    {
+      "label": "内容产能",
+      "value": 12,
+      "unit": "倍",
+      "delta": "+38%"
+    },
+    {
+      "label": "获客成本",
+      "value": 63,
+      "unit": "%↓",
+      "delta": "-41%"
+    },
+    {
+      "label": "交付周期",
+      "value": 7,
+      "unit": "天",
+      "delta": "-55%"
+    }
+  ],
+  "chart": [
+    22,
+    34,
+    30,
+    48,
+    44,
+    62,
+    58,
+    76,
+    71,
+    88
+  ],
+  "danmu": [
+    "宝安的朋友举个手",
+    "666 已回复",
+    "这个拆解好清楚",
+    "AI 营销真能落地吗",
+    "求一份实战案例",
+    "做实体店的太需要了",
+    "终于把链路讲明白了",
+    "已经关注，等更新"
+  ],
+  "imagePolicy": {
+    "_note": "通用配图规则：按视频时长算需要几张配图，再从 beats 里等距取材。30 秒取 3-5 张，60 秒取 6-10 张；换算密度约每 7.5 秒一张。",
+    "secondsPerImage": 7.5,
+    "minImages": 3,
+    "maxImages": 12,
+    "aspect": "9:16",
+    "table": [
+      {
+        "range": "≤ 30s",
+        "images": "3 - 5"
+      },
+      {
+        "range": "≈ 60s",
+        "images": "6 - 10"
+      },
+      {
+        "range": "≈ 3min",
+        "images": "12 - 20"
+      }
+    ]
+  },
+  "styles": [
+    {
+      "id": "crt",
+      "num": 1,
+      "name": "CRT 复古数据终端",
+      "group": "复古终端向",
+      "imageStyle": "retro CRT data-terminal aesthetic, phosphor green monochrome glow, visible scanlines, dark near-black laboratory, monospace data readout boxes, subtle film grain",
+      "imageLayer": {
+        "xy": [
+          14,
+          144
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "retro",
+      "num": 2,
+      "name": "复古胶片双语",
+      "group": "复古终端向",
+      "imageStyle": "vintage 16mm film still, warm faded amber tones, heavy film grain, soft vignette, analog color shift, cinematic",
+      "imageLayer": {
+        "xy": [
+          14,
+          64
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "dash",
+      "num": 3,
+      "name": "增长数据仪表盘",
+      "group": "数据严谨向",
+      "imageStyle": "dark data dashboard UI, cyan accent charts and glowing line graphs, frosted glass panels, deep navy background",
+      "imageLayer": {
+        "xy": [
+          14,
+          114
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "report",
+      "num": 4,
+      "name": "财经研报纪要",
+      "group": "数据严谨向",
+      "imageStyle": "financial research note editorial, clean warm paper, navy and crimson accents, serif typography, data tables",
+      "imageLayer": {
+        "xy": [
+          14,
+          74
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "journal",
+      "num": 5,
+      "name": "手写手账便签",
+      "group": "生活亲和向",
+      "imageStyle": "handwritten journal page, washi tape, pastel sticky notes, warm beige paper texture, soft daylight, cozy",
+      "imageLayer": {
+        "xy": [
+          14,
+          14
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "chalk",
+      "num": 6,
+      "name": "黑板粉笔讲解",
+      "group": "生活亲和向",
+      "imageStyle": "blackboard chalk drawing, hand-drawn diagram and arrows, white and colored chalk, classroom texture, dust",
+      "imageLayer": {
+        "xy": [
+          14,
+          14
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "promo",
+      "num": 7,
+      "name": "电商促销大字报",
+      "group": "商业热度向",
+      "imageStyle": "bold e-commerce promo poster, flat red and yellow color blocks, huge heavy Chinese headline, starburst badge, high contrast",
+      "imageLayer": {
+        "xy": [
+          14,
+          154
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "danmu",
+      "num": 8,
+      "name": "弹幕评论流",
+      "group": "商业热度向",
+      "imageStyle": "live streaming comment overlay aesthetic, dark scene with floating neon chat bubbles, high energy, magenta and cyan",
+      "imageLayer": {
+        "xy": [
+          534,
+          954
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "magazine",
+      "num": 9,
+      "name": "杂志编辑排版",
+      "group": "出版编辑向",
+      "imageStyle": "editorial magazine spread, generous negative space, off-white and deep navy palette, thin elegant serif headline",
+      "imageLayer": {
+        "xy": [
+          14,
+          84
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "minimal",
+      "num": 10,
+      "name": "极简纪录片章节",
+      "group": "出版编辑向",
+      "imageStyle": "minimal documentary cinema still, muted desaturated tones, lots of empty space, quiet natural light",
+      "imageLayer": {
+        "xy": [
+          14,
+          14
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "news",
+      "num": 11,
+      "name": "新闻播报台",
+      "group": "时事权威向",
+      "imageStyle": "television news broadcast graphics, deep blue and red lower-third banner, globe and world map motif, clean authoritative studio",
+      "imageLayer": {
+        "xy": [
+          14,
+          134
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "product",
+      "num": 12,
+      "name": "产品发布官网",
+      "group": "科技发布向",
+      "imageStyle": "tech product launch keynote, dark stage with a glowing hero object, dramatic rim light, sleek premium minimal decor",
+      "imageLayer": {
+        "xy": [
+          14,
+          144
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "glass",
+      "num": 13,
+      "name": "流体玻璃拟态",
+      "group": "现代 UI 向",
+      "imageStyle": "fluid glassmorphism UI, frosted translucent cards, soft pastel gradient blobs, thin light strokes, airy",
+      "imageLayer": {
+        "xy": [
+          14,
+          14
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "timeline",
+      "num": 14,
+      "name": "时间轴进程",
+      "group": "叙事结构向",
+      "imageStyle": "vertical timeline infographic, milestone nodes on a single spine, clean flat vector, muted navy and orange",
+      "imageLayer": {
+        "xy": [
+          534,
+          1034
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "quote",
+      "num": 15,
+      "name": "金句名言卡",
+      "group": "观点表达向",
+      "imageStyle": "quote card aesthetic, elegant serif typography, one large quotation mark, minimal warm neutral background",
+      "imageLayer": {
+        "xy": [
+          14,
+          54
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "podcast",
+      "num": 16,
+      "name": "播客声波",
+      "group": "音频播客向",
+      "imageStyle": "podcast cover art, glowing audio waveform, studio condenser microphone, warm gradient background, moody",
+      "imageLayer": {
+        "xy": [
+          14,
+          14
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "travel",
+      "num": 17,
+      "name": "旅行 vlog 贴纸",
+      "group": "生活方式向",
+      "imageStyle": "travel vlog collage, polaroid photos, ticket stubs, doodle stickers and handwriting arrows, bright and playful",
+      "imageLayer": {
+        "xy": [
+          14,
+          1034
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "blueprint",
+      "num": 18,
+      "name": "工程蓝图",
+      "group": "专业技术向",
+      "imageStyle": "engineering blueprint, white technical line drawing on deep blue grid paper, dimension annotations, precise schematic",
+      "imageLayer": {
+        "xy": [
+          534,
+          1034
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "gradient",
+      "num": 19,
+      "name": "渐变大字现代",
+      "group": "品牌视觉向",
+      "imageStyle": "modern brand gradient poster, vibrant mesh gradient, huge bold sans-serif type, glossy premium look",
+      "imageLayer": {
+        "xy": [
+          14,
+          14
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    },
+    {
+      "id": "card",
+      "num": 20,
+      "name": "信息卡片流",
+      "group": "信息流向",
+      "imageStyle": "social feed info card, soft rounded corners on a clean layout, tag chips, gentle pastel accents, tidy",
+      "imageLayer": {
+        "xy": [
+          14,
+          174
+        ],
+        "size": [
+          168,
+          224
+        ]
+      }
+    }
+  ],
+  "_imageLayerNote": "每套模板自带 imageLayer.xy —— 配图卡片的绝对落点，已按该套版面算出（避开标题与模板信息条、避开人脸），不是随手挑的角。前端选「自动」时用这里；选定某个方位则整片统一覆盖。"
+}
