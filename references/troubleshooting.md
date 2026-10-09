@@ -83,6 +83,8 @@ python3 preview.py --job=我的任务 --styles=promo --size=150x200  # 卡片再
 确认合适后，把坐标写回 `templates.json` 该套的 `imageLayer.xy`，之后一直是这个位置。
 实在挤不开就把配图层关掉：`--no-images`。
 
+![修复前后对比](../docs/image-position-fix.jpg)
+
 ### 字幕变成豆腐块 / 一片空白
 
 无头 Chromium **不渲染 emoji**。所有模板一律用纯文字，别在文案里塞 emoji。
