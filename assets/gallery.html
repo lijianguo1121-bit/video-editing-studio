@@ -580,6 +580,23 @@
   border:1.5px solid rgba(255,255,255,.34);
   background:linear-gradient(180deg,rgba(255,255,255,.14),transparent 34%,rgba(0,0,0,.34));
 }
+/* ---------- B-roll + 圆圈画中画（主画面缩成小圆圈，背景换成配图）--------
+   这一层压在模板层下面、主画面上面：整屏铺配图，并在配图上挖一个圆洞，
+   洞的位置/半径与 ffmpeg 侧的运镜关键帧严格同步，主画面就从洞里透出来。
+   洞半径恒不超过"缩略画面内切圆"，所以永远露不出 ffmpeg 那层黑底。 */
+.g-broll{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.g-brollitem{position:absolute;inset:0;opacity:0;will-change:opacity;
+  backface-visibility:hidden;}
+.g-brollitem img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  display:block;backface-visibility:hidden;will-change:transform;}
+.g-brollitem::after{content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(120% 72% at 50% 48%,rgba(0,0,0,0) 38%,rgba(0,0,0,.36) 100%),
+    linear-gradient(180deg,rgba(0,0,0,.36) 0%,rgba(0,0,0,.05) 30%,
+                    rgba(0,0,0,.06) 62%,rgba(0,0,0,.56) 100%);}
+.g-pipring{position:absolute;border-radius:50%;pointer-events:none;z-index:58;opacity:0;
+  box-shadow:0 0 0 3px rgba(255,255,255,.94),0 0 0 7px rgba(0,0,0,.24),
+             0 16px 46px rgba(0,0,0,.62);backface-visibility:hidden;}
 </style>
 </head>
 <body>
@@ -1522,6 +1539,8 @@ function mkImgLayer(host, C) {
     : imgXY(cfg.pos || 'bl', sz[0], sz[1]);
   const cards = plan.map(p => {
     const c = el('div', 'g-imgcard');
+    /* 已经做成 B-roll 画中画的那几张，不再重复出一张小卡 */
+    c.dataset.pip = ((C.camera && C.camera.pips) || []).some(x => x.i === p.idx) ? '1' : '';
     const im = el('img');
     im.src = p.file;
     const v = p.variant || {};
@@ -1552,6 +1571,10 @@ function drawImgLayer(L, t) {
   for (let k = 0; k < cards.length; k++) {
     const c = cards[k];
     if (c.dataset.dead) continue;
+    if (c.dataset.pip === '1') {
+      if (c.style.display !== 'none') c.style.display = 'none';
+      continue;
+    }
     const t0 = starts[k];
     const t1 = k + 1 < starts.length ? starts[k + 1] : dur;
     let o = 0, local = 0;
@@ -1569,6 +1592,116 @@ function drawImgLayer(L, t) {
   }
 }
 
+/* ================= B-roll + 圆圈画中画 ================================== */
+/* 和 camera.py 共用同一份关键帧：k 是画面缩放，(x,y) 是"人脸锚点"该落在屏幕
+   的哪。ffmpeg 侧照这份缩放 / 搬位主画面，这里照同一份算圆洞的位置与半径。 */
+function sm01(p) { p = p < 0 ? 0 : (p > 1 ? 1 : p); return p * p * (3 - 2 * p); }
+
+function camAt(cam, t) {
+  const segs = cam.segs || [];
+  for (let i = 0; i < segs.length; i++) {
+    const s = segs[i];
+    if (t < s.t1 || i === segs.length - 1) {
+      let p = (t - s.t0) / Math.max(1e-6, s.t1 - s.t0);
+      p = p < 0 ? 0 : (p > 1 ? 1 : p);
+      const e = s.ease === 'smooth' ? sm01(p) : p;
+      return { k: s.k0 + (s.k1 - s.k0) * e,
+               x: s.x0 + (s.x1 - s.x0) * e,
+               y: s.y0 + (s.y1 - s.y0) * e };
+    }
+  }
+  const a = cam.anchor || [360, 400];
+  return { k: 1, x: a[0], y: a[1] };
+}
+
+function mkBroll(stage, C) {
+  const cam = C.camera;
+  if (!cam || !Array.isArray(cam.pips) || !cam.pips.length) return null;
+  const wrap = el('div', 'g-broll');
+  const items = cam.pips.map(p => {
+    const box = el('div', 'g-brollitem');
+    const im = el('img');
+    im.src = p.image;
+    const rec = { box: box, im: im, p: p, dead: false };
+    im.onerror = () => { rec.dead = true; box.style.display = 'none'; };
+    box.appendChild(im);
+    wrap.appendChild(box);
+    return rec;
+  });
+  const ring = el('div', 'g-pipring');
+  stage.insertBefore(wrap, stage.firstChild);      /* 压在模板层下面 */
+  stage.appendChild(ring);                        /* 圆环在模板层上面 */
+  return { wrap: wrap, items: items, ring: ring, cam: cam, lastMask: '' };
+}
+
+function drawBroll(B, t) {
+  if (!B) return;
+  const cam = B.cam;
+  const c = camAt(cam, t);
+  const maxHole = (cam.inset || 300) * c.k * 0.995;   /* 缩略画面的内切圆半径 */
+  let hole = maxHole, op = 0, ringOp = 0;
+
+  for (let i = 0; i < B.items.length; i++) {
+    const it = B.items[i];
+    if (it.dead) continue;
+    const p = it.p, lead = p.lead || 0.35, tr = p.tr || 0.55;
+    const a0 = p.t0 - lead, a1 = p.t1 + lead;
+    let o = 0;
+    if (t >= a0 && t <= a1) o = Math.min(sm01((t - a0) / 0.22), sm01((a1 - t) / 0.22));
+    if (o <= 0.004) {
+      if (it.box.style.display !== 'none') {
+        it.box.style.display = 'none';
+        it.box.style.opacity = 0;
+      }
+      continue;
+    }
+    if (it.box.style.display !== 'block') it.box.style.display = 'block';
+    it.box.style.opacity = o.toFixed(3);
+    const local = Math.max(0, Math.min(1, (t - p.t0) / Math.max(0.3, p.t1 - p.t0)));
+    it.im.style.transform = 'translate3d(' + ((0.5 - local) * 14).toFixed(2) + 'px,0,0) '
+                          + 'scale(' + (1.06 + 0.07 * local).toFixed(4) + ')';
+
+    if (o > op) {
+      op = o;
+      /* 圆洞倍率：出现前收到内切圆，然后一路收到目标半径 */
+      const rF = Math.max(0.12, p.r / Math.max(1, (cam.inset || 300) * (p.k || c.k) * 0.995));
+      let f;
+      if (t < p.t0) f = 8 + (1 - 8) * sm01((t - a0) / Math.max(0.01, p.t0 - a0));
+      else if (t < p.t0 + tr) f = 1 + (rF - 1) * sm01((t - p.t0) / Math.max(0.01, tr));
+      else if (t < p.t1 - tr) f = rF;
+      else if (t < p.t1) f = rF + (1 - rF) * sm01((t - (p.t1 - tr)) / Math.max(0.01, tr));
+      else f = 1 + (8 - 1) * sm01((t - p.t1) / Math.max(0.01, lead));
+      const h = maxHole * f;
+      if (h < hole) hole = h;
+      ringOp = Math.max(ringOp,
+                        Math.max(0, Math.min(1, (p.r * 1.75 - h) / (p.r * 0.75))) * o);
+    }
+  }
+
+  if (op <= 0.004) {
+    if (B.wrap.style.display !== 'none') {
+      B.wrap.style.display = 'none';
+      B.ring.style.opacity = 0;
+    }
+    return;
+  }
+  if (B.wrap.style.display !== 'block') B.wrap.style.display = 'block';
+
+  const mask = 'radial-gradient(circle at ' + c.x.toFixed(1) + 'px ' + c.y.toFixed(1) + 'px,'
+    + 'rgba(0,0,0,0) 0,rgba(0,0,0,0) ' + Math.max(0, hole - 2.2).toFixed(1) + 'px,'
+    + 'rgba(0,0,0,1) ' + hole.toFixed(1) + 'px)';
+  if (mask !== B.lastMask) {
+    B.lastMask = mask;
+    B.wrap.style.maskImage = mask;
+    B.wrap.style.webkitMaskImage = mask;
+  }
+  B.ring.style.opacity = ringOp.toFixed(3);
+  B.ring.style.width = (hole * 2).toFixed(1) + 'px';
+  B.ring.style.height = (hole * 2).toFixed(1) + 'px';
+  B.ring.style.left = (c.x - hole).toFixed(1) + 'px';
+  B.ring.style.top = (c.y - hole).toFixed(1) + 'px';
+}
+
 /* ============================== bootstrap =============================== */
 const T = S[STYLE];
 if (!T) throw new Error('unknown template: ' + STYLE);
@@ -1579,8 +1712,14 @@ function boot() {
   stage.appendChild(layer);
   T.host = layer;
   T.build(layer, CFG);
+  /* B-roll 必须压在模板层下面，所以先建它；圆环再单独挂到最上面一层 */
+  const BR = mkBroll(stage, CFG);
   const IMG = mkImgLayer(stage, CFG);
-  window.render = function (t) { T.draw(t, CFG); drawImgLayer(IMG, t); };
+  window.render = function (t) {
+    T.draw(t, CFG);
+    drawBroll(BR, t);
+    drawImgLayer(IMG, t);
+  };
   document.fonts.ready.then(() => {
     if (T.fit) T.fit(CFG);
     window.ready = true;

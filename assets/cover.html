@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>封面</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{background:#000;overflow:hidden;}
+  #cv{
+    position:relative;overflow:hidden;background:#0b0b0d;
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",
+                "Source Han Sans SC","Noto Sans CJK SC",sans-serif;
+  }
+  /* 底：首帧放大 + 高斯模糊，把画幅补满，顺便给文字垫一层暗底 */
+  .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+      filter:blur(38px) saturate(1.15) brightness(.58);transform:scale(1.22);}
+  .fg{position:absolute;left:50%;transform:translateX(-50%);
+      -webkit-user-select:none;user-select:none;}
+  .shade{position:absolute;inset:0;}
+  .txt{position:absolute;left:0;right:0;}
+
+  .kicker{display:inline-block;font-weight:800;letter-spacing:.06em;
+          padding:.30em .78em;border-radius:.22em;line-height:1;}
+  .rule{height:.10em;border-radius:.05em;}
+  .big{font-weight:900;color:#fff;letter-spacing:-.01em;
+       text-shadow:0 .045em 0 rgba(0,0,0,.40),0 0 .30em rgba(0,0,0,.55);}
+  .big .hl{background:none;}
+  .small{font-weight:600;color:rgba(255,255,255,.92);letter-spacing:.16em;
+         text-shadow:0 .03em .18em rgba(0,0,0,.7);}
+  .meta{position:absolute;font-weight:700;letter-spacing:.16em;
+        color:rgba(255,255,255,.55);}
+</style>
+</head>
+<body>
+<div id="cv">
+  <img class="bg" id="bg" alt="">
+  <img class="fg" id="fg" alt="">
+  <div class="shade" id="shade"></div>
+  <div class="txt" id="txt">
+    <div class="rule" id="rule"></div>
+    <div class="kicker" id="kicker"></div>
+    <div class="big" id="big"></div>
+    <div class="small" id="small"></div>
+  </div>
+  <div class="meta" id="meta"></div>
+</div>
+
+<script src="cover_cfg.js"></script>
+<script>
+/* ==========================================================================
+   cover_cfg.js（同目录）提供 window.__COVER：
+     {
+       w, h,                    // 画布尺寸，如 1080x1440
+       ratio: '3x4',            // 仅做标记
+       layout: 'bottom',        // top | bottom | center
+       palette: 'yellow',       // 见 PALETTES
+       bg, fg,                  // 底图 / 首帧（相对本文件的路径）
+       anchor: [ax, ay],        // 人脸锚点，在 720x1280 空间里
+       fgZoom: 1.22,
+       kicker, big, small, meta
+     }
+   渲染完把 window.ready 置 true，外面截图。
+   ========================================================================== */
+const PALETTES = {
+  yellow: { ac:'#FFE250', acInk:'#0B0B0D', tint:'#FFE250' },
+  orange: { ac:'#FF7A18', acInk:'#160603', tint:'#FFB273' },
+  cyan:   { ac:'#39E2FF', acInk:'#04141C', tint:'#9BEFFF' },
+  pink:   { ac:'#FF2E93', acInk:'#1C0412', tint:'#FF9ACB' },
+  white:  { ac:'#FFFFFF', acInk:'#0B0B0D', tint:'#FFFFFF' }
+};
+
+const C  = window.__COVER;
+const cv = document.getElementById('cv');
+const W  = C.w, H = C.h, S = W / 1080;      // 一切尺寸按 1080 宽等比缩放
+
+cv.style.width  = W + 'px';
+cv.style.height = H + 'px';
+
+/* ---------- 明暗层：按文字落在哪，压暗对应的半边 ---------- */
+function shadeCss() {
+  const g = (a, b) => 'linear-gradient(180deg,transparent ' + a + '%,rgba(0,0,0,.72) ' + b + '%)';
+  if (C.layout === 'top')    return g(22, 0) + ',' + 'linear-gradient(180deg,rgba(0,0,0,.74) 0%,rgba(0,0,0,.10) 46%,rgba(0,0,0,.34) 100%)';
+  if (C.layout === 'center') return 'linear-gradient(180deg,rgba(0,0,0,.42) 0%,rgba(0,0,0,.62) 42%,rgba(0,0,0,.62) 58%,rgba(0,0,0,.42) 100%)';
+  return 'linear-gradient(180deg,rgba(0,0,0,.34) 0%,rgba(0,0,0,.06) 40%,rgba(0,0,0,.72) 78%,rgba(0,0,0,.88) 100%)';
+}
+
+/* ---------- 底图 / 首帧 ---------- */
+document.getElementById('bg').src = C.bg;
+const fg = document.getElementById('fg');
+fg.src = C.fg;
+
+const fgH   = H * (C.fgZoom || 1.22);
+const fgW   = fgH * 720 / 1280;
+const scale = fgH / 1280;
+const ax    = (C.anchor && C.anchor[0]) || 360;
+const ay    = (C.anchor && C.anchor[1]) || 412;
+
+/* 人脸要落在哪：文字在底部 -> 脸抬到上三分之一；文字在顶部 -> 脸压到下方 */
+const faceY = C.layout === 'top' ? 0.70 : (C.layout === 'center' ? 0.50 : 0.38);
+let fgTop = faceY * H - ay * scale;
+fgTop = Math.min(0, Math.max(H - fgH, fgTop));
+let fgLeft = W / 2 - ax * scale;
+
+fg.style.width  = fgW + 'px';
+fg.style.height = fgH + 'px';
+fg.style.top    = fgTop + 'px';
+fg.style.left   = fgLeft + 'px';
+fg.style.transform = 'none';
+document.getElementById('shade').style.background = shadeCss();
+
+/* ---------- 配色 ---------- */
+const P = PALETTES[C.palette] || PALETTES.yellow;
+cv.style.setProperty('--ac', P.ac);
+document.documentElement.style.setProperty('--ac', P.ac);
+
+/* ---------- 文案：一行大字 + 一行小字 ---------- */
+const PAD = Math.round(76 * S);
+const pad = Math.round(74 * S);          // 左侧竖条 / 色块的公用缩进
+const txtBox = document.getElementById('txt');
+txtBox.style.paddingLeft  = PAD + 'px';
+txtBox.style.paddingRight = PAD + 'px';
+
+/* 大字里把数字/倍数挑出来上高亮色，抖音封面常见的"点睛" */
+function emphasize(s) {
+  const esc = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return esc.replace(/(\d+(?:\.\d+)?\s*(?:%|倍|个|万|天|秒|步|条|种|次|小时|分钟|元|块)?)/g,
+                     '<span class="hl" style="color:' + P.tint + '">$1</span>');
+}
+
+/* 大字的"视觉长度"：汉字算 1，拉丁字母/数字算 0.55 —— 用来定一行放得下几个字 */
+function visLen(s) {
+  let n = 0;
+  for (const ch of s) n += /[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/.test(ch) ? 1 : 0.55;
+  return n;
+}
+
+/* 大字尽量一行，超长就在中间断成两行 —— 断点优先落在标点/空格 */
+function splitBig(s, limit) {
+  if (visLen(s) <= limit) return [s];
+  const half = Math.ceil(s.length / 2);
+  let cut = -1;
+  for (let d = 0; d < half; d++) {
+    for (const i of [half - d, half + d]) {
+      if (i > 0 && i < s.length && /[\s，,、·:：。!！?？]/.test(s[i - 1])) { cut = i; break; }
+    }
+    if (cut > 0) break;
+  }
+  if (cut <= 0) cut = half;
+  return [s.slice(0, cut).replace(/[\s，,、·:：]+$/, ''), s.slice(cut).replace(/^[\s，,、·:：]+/, '')];
+}
+
+const bigEl = document.getElementById('big');
+const smallEl = document.getElementById('small');
+const kickEl = document.getElementById('kicker');
+const ruleEl = document.getElementById('rule');
+
+const bigText = (C.big || '').trim();
+const avail = W - PAD * 2;
+
+/* 一行放得下 9 个汉字左右；超过就断两行，字号相应降一档 */
+let lines = splitBig(bigText, 9);
+bigEl.innerHTML = '<div>' + lines.map(emphasize).join('</div><div>') + '</div>';
+
+function fitBig() {
+  const oneLine = lines.length === 1;
+  let fs = Math.round((oneLine ? 138 : 116) * S);
+  const min = Math.round(58 * S);
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;'
+    + 'font-weight:900;letter-spacing:-.01em;font-family:' + getComputedStyle(bigEl).fontFamily;
+  document.body.appendChild(probe);
+  while (fs > min) {
+    probe.style.fontSize = fs + 'px';
+    probe.textContent = lines.reduce((a, b) => (a.length >= b.length ? a : b), '');
+    if (probe.offsetWidth <= avail) break;
+    fs -= 3;
+  }
+  probe.remove();
+  return fs;
+}
+const fsBig = fitBig();
+bigEl.style.fontSize = fsBig + 'px';
+bigEl.style.lineHeight = '1.06';
+bigEl.querySelectorAll('div').forEach(d => { d.style.height = 'auto'; });
+
+/* 小字：一行，超宽就缩字号 */
+let fsSmall = Math.round(46 * S);
+smallEl.textContent = (C.small || '').trim();
+smallEl.style.fontSize = fsSmall + 'px';
+while (smallEl.scrollWidth > avail && fsSmall > 24 * S) {
+  fsSmall -= 2;
+  smallEl.style.fontSize = fsSmall + 'px';
+}
+smallEl.style.marginTop = Math.round(30 * S) + 'px';
+
+/* 顶上的小标签 + 竖色条 */
+if (C.kicker) {
+  kickEl.textContent = C.kicker;
+  kickEl.style.fontSize = Math.round(32 * S) + 'px';
+  let fk = Math.round(32 * S);
+  while (kickEl.offsetWidth > avail * 0.9 && fk > 18 * S) { fk -= 2; kickEl.style.fontSize = fk + 'px'; }
+  kickEl.style.background = P.ac;
+  kickEl.style.color = P.acInk;
+  kickEl.style.marginBottom = Math.round(26 * S) + 'px';
+} else {
+  kickEl.style.display = 'none';
+}
+ruleEl.style.width  = Math.round(104 * S) + 'px';
+ruleEl.style.height = Math.round(11 * S) + 'px';
+ruleEl.style.background = P.ac;
+ruleEl.style.marginBottom = Math.round(30 * S) + 'px';
+
+/* 文字块位置 */
+if (C.layout === 'top') {
+  txtBox.style.top = Math.round(H * 0.095) + 'px';
+  txtBox.style.bottom = 'auto';
+} else if (C.layout === 'center') {
+  txtBox.style.top = '50%';
+  txtBox.style.bottom = 'auto';
+  txtBox.style.transform = 'translateY(-50%)';
+} else {
+  txtBox.style.bottom = Math.round(H * 0.10) + 'px';
+  txtBox.style.top = 'auto';
+}
+
+/* 角落的极小字（品牌 / 期号），可选 */
+const metaEl = document.getElementById('meta');
+if (C.meta) {
+  metaEl.textContent = C.meta;
+  metaEl.style.fontSize = Math.round(24 * S) + 'px';
+  metaEl.style.left = PAD + 'px';
+  metaEl.style.bottom = Math.round(H * 0.028) + 'px';
+} else {
+  metaEl.style.display = 'none';
+}
+
+window.__LAYOUT = { fsBig: fsBig, lines: lines.length, padding: PAD, layout: C.layout };
+window.ready = true;
+</script>
+</body>
+</html>

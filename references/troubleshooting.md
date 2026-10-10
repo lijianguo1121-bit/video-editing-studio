@@ -85,6 +85,29 @@ python3 preview.py --job=我的任务 --styles=promo --size=150x200  # 卡片再
 
 ![修复前后对比](../docs/image-position-fix.jpg)
 
+### 运镜 / 圆圈画中画不对劲
+
+| 现象 | 原因与处理 |
+|---|---|
+| 整屏全黑 | 单帧对比场景（`preview.py`）时基没对齐：`overlay` 以**主输入**的时间轴为准，底片用 `setpts` 钉到 `t` 后画布还停在 0，叠加取不到帧。成片链路两条流都从 0 起，不受影响。 |
+| 画面被推出画外 / 只剩一角 | 偏移公式漏了 `-a*k` 项（`x` 应等于 `cx - ax*k`，不是 `cx`）。 |
+| `Undefined constant or missing '('` | `pad` 的 `x/y` 不支持时间变量 `t`。位置要交给 `overlay` 的 `x/y`。 |
+| `Invalid argument` 且表达式很长 | 单条表达式超过约 2000 字符。减少段数，或把缓动 `if()` 换成 `max(0,min(...,1))` 线性段。 |
+| 圆圈里是黑底不是人脸 | 洞半径超过了缩略画面的内切圆（`inset*k*0.995`）。检查人脸锚点是否估错（`estimate_anchor` 会把结果打进日志）。 |
+| 圆圈太密 / 一开场就是圆圈 | `auto` 的纪律是「开场 1.5s 内不做 + 总时长 ≤ 45%」。想更密用 `--pip=all`；想全关 `--pip=off --zoom=0`。 |
+| 动效层整个不见了（单帧对比时） | 动效 PNG 只有一帧（pts=0），别给它加 `eof_action=pass`，会被判成已 EOF。用默认的 `repeat`。 |
+
+### 封面不对
+
+- **大字选得不好**：规则提炼只做"从已有文案里挑最像钩子的那句"，不会无中生有。
+  用 `--big="…" --small="…"` 手填最稳。
+- **想改颜色 / 版式**：直接改 `jobs/<id>/covers/cover_cfg.js`（配色 `palette`、版式 `layout`），
+  或者双击 `covers/cover.html` 在浏览器里实时看。
+- **首帧是黑的**：说明原片开头是淡入。`grab()` 会自动往后挪（0.35 / 0.8 / 1.4s），
+  也可以直接指定 `--at=2.5`。
+- **想让底图更好看**：把 `covers/ai_prompts.json` 里的提示词**连同 `firstframe.jpg` 一起**
+  交给 OpenAI Image / 香蕉，首帧作参考图人物不会变形。
+
 ### 字幕变成豆腐块 / 一片空白
 
 无头 Chromium **不渲染 emoji**。所有模板一律用纯文字，别在文案里塞 emoji。

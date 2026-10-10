@@ -31,6 +31,8 @@ sys.path.insert(0, str(HERE))
 
 import paths                                       # noqa: E402
 import autobeat                                    # noqa: E402
+import camera as cam_mod                           # noqa: E402
+import cover as cover_mod                          # noqa: E402
 import music_gen                                   # noqa: E402
 
 PROJECT = paths.ASSETS                # 引擎目录（skill 的 assets/ 或旧工程根）
@@ -221,7 +223,7 @@ def write_image_requests(job_dir, styles, plan, cfg):
 
 
 # ================================================================== 配置
-def build_cfg(job_dir, opts, duration, beats, images):
+def build_cfg(job_dir, opts, duration, beats, images, cam_plan=None):
     """生成这个任务专属的模板配置（templates.json 的结构，但换了内容和时长）。"""
     base = json.loads(TPL_JSON.read_text(encoding="utf-8"))
     brand = dict(base.get("brand", {}))
@@ -250,6 +252,7 @@ def build_cfg(job_dir, opts, duration, beats, images):
             "pos": "tl" if pos == "auto" else pos,
             "opacity": float(opts.get("imageOpacity", 0.88)),
         },
+        "camera": cam_plan,
         "styles": styles,
     }
     (job_dir / "templates.js").write_text(
@@ -364,8 +367,12 @@ def measure_loudness(path):
     return float(d["input_i"]), float(d["input_tp"])
 
 
-def mux(job_dir, base, style, duration, target):
-    """把透明动效层叠到原片上，配乐按测得的响度补齐增益后混入。"""
+def mux(job_dir, base, style, duration, target, cam_plan=None):
+    """把透明动效层叠到原片上，配乐按测得的响度补齐增益后混入。
+
+    画面顺序：黑色画布 → 运镜后的原片 → 动效层（含 B-roll 与圆圈挖洞）。
+    运镜（放大/缩小、缩成圆圈）用 scale(eval=frame) + overlay(x/y 用 t) 实现。
+    """
     premix = build_premix(job_dir, base, style, duration)
     meas = measure_loudness(premix)
     gain = 0.0
@@ -373,15 +380,21 @@ def mux(job_dir, base, style, duration, target):
         # 两步法：先量后补。-15 LUFS 是短视频平台的安全区，后级限幅兜底。
         gain = min(-15.0 - meas[0], 7.5)
     grade = GRADE[STYLE_GRADE.get(style, "warm")]
-    graph = (
-        "[2:a]volume=%.2fdB,alimiter=level_in=1:level_out=1:limit=0.794:"
-        "attack=5:release=80:level=disabled,aformat=channel_layouts=stereo[aout];"
-        "[0:v]%s[graded];"
-        "[1:v]format=rgba[ov];"
-        "[graded][ov]overlay=0:0:eof_action=pass:format=auto,format=yuv420p[vout]"
-        % (gain, grade)
-    )
-    run([FFMPEG, "-hide_banner", "-loglevel", "warning", "-y",
+    abed = ("[2:a]volume=%.2fdB,alimiter=level_in=1:level_out=1:limit=0.794:"
+            "attack=5:release=80:level=disabled,aformat=channel_layouts=stereo[aout]"
+            % gain)
+    if cam_plan:
+        cam = cam_mod.filter_chain(cam_plan, grade)
+        vgraph = cam_mod.mux_chain(cam, duration)
+    else:
+        vgraph = ("color=c=black:s=%dx%d:r=%d:d=%.3f[cv];"
+                  "[0:v]%s[vids];"
+                  "[cv][vids]overlay=0:0:format=auto[cam];"
+                  "[1:v]format=rgba[ov];"
+                  "[cam][ov]overlay=0:0:eof_action=pass:format=auto,format=yuv420p[vout]"
+                  % (OUT_W, OUT_H, FPS, duration, grade))
+    graph = "%s;%s" % (abed, vgraph)
+    run([FFMPEG, "-hide_banner", "-loglevel", "error", "-y",
          "-i", str(base),
          "-i", str(job_dir / "frames" / ("%s.mov" % style)),
          "-i", str(premix),
@@ -470,12 +483,24 @@ def run_job(job_dir, opts, log=print, status=None):
         images_by_style[sid] = items
     build_cfg(job_dir, opts, duration, beats, images_by_style.get(styles[0], []))
 
+    # 5b) 运镜锚点（人脸位置，全片共用；坐标已在 720x1280 输出空间里）
+    anchor = cam_mod.estimate_anchor(base)
+    log("运镜锚点（人脸）%s" % (anchor,))
+
     # 6) 逐帧渲染（每套的配图不同，渲染前重建页面配置）
     if status:
         status.set(step="render", message="渲染动效帧", pct=25)
     outputs = []
     for si, sid in enumerate(styles):
-        build_cfg(job_dir, opts, duration, beats, images_by_style.get(sid, []))
+        style_cfg = next((s for s in cfg["styles"] if s["id"] == sid), None)
+        cam_plan = cam_mod.build_plan(duration, beats, images_by_style.get(sid, []),
+                                      anchor, style_cfg, opts)
+        build_cfg(job_dir, opts, duration, beats, images_by_style.get(sid, []),
+                  cam_mod.js_plan(cam_plan))
+        if cam_plan["pips"]:
+            log("  运镜：%d 段，圆圈 %d 个（%s）"
+                % (len(cam_plan["segs"]), len(cam_plan["pips"]),
+                   "、".join("%.1f-%.1fs" % (p["t0"], p["t1"]) for p in cam_plan["pips"])))
         if status:
             status.style(sid, "rendering", 25 + 60 * si / len(styles), "渲染动效帧")
         log("── %s ──" % sid)
@@ -490,9 +515,20 @@ def run_job(job_dir, opts, log=print, status=None):
             num = si + 1
         out = job_dir / "out" / ("%02d_%s.mp4" % (num, sid))
         out.parent.mkdir(exist_ok=True)
-        meas, gain = mux(job_dir, base, sid, duration, out)
+        meas, gain = mux(job_dir, base, sid, duration, out, cam_plan)
 
-        # 8) 质检
+        # 9) 封面图：截成片首帧 + 从标题文案里提炼一行大字一行小字
+        covers = []
+        if opts.get("covers", True):
+            try:
+                covers = cover_mod.make_covers(
+                    job_dir, sid, style_cfg, cfg.get("brand") or {},
+                    beats, opts.get("script") or "", dict(opts, anchor=anchor),
+                    log=log, base=out)
+            except Exception as e:                       # noqa: BLE001
+                log("  封面生成失败（不影响成片）：%s" % e)
+
+        # 10) 质检
         corr = verify(base, out)
         log("  成片 %s  响度=%s 增益=%+.2fdB  原声保留=%.3f"
             % (out.name, meas, gain, corr if corr is not None else float("nan")))
@@ -503,6 +539,8 @@ def run_job(job_dir, opts, log=print, status=None):
             "duration": duration,
             "loudness": meas[0] if meas else None,
             "voice_keep": round(corr, 4) if corr is not None else None,
+            "covers": [{"file": c["file"], "ratio": c["ratio"],
+                        "layout": c["layout"], "text": c["text"]} for c in covers],
         })
         if status:
             status.style(sid, "done", 86 + 14 * (si + 1) / len(styles), "已出片")
@@ -528,6 +566,18 @@ def main():
     ap.add_argument("--image-pos", default="auto",
                     help="配图位置：auto(按模板自动避让) / tl / tr / ml / mr / bl / br")
     ap.add_argument("--no-images", action="store_true")
+    ap.add_argument("--pip", default="auto", choices=["auto", "off", "all"],
+                    help="圆圈画中画：auto 隔一个配图节拍做一次 / off 关 / all 全做")
+    ap.add_argument("--zoom", type=float, default=0.075,
+                    help="运镜的推近幅度（0.075 = 放大 7.5%%），0 关闭运镜")
+    ap.add_argument("--pip-r", type=int, default=150, help="圆圈半径（720x1280 画布）")
+    ap.add_argument("--no-covers", action="store_true", help="不出封面图")
+    ap.add_argument("--cover-ratios", default="3x4,9x16",
+                    help="封面画幅：3x4（主页）/ 9x16（视频内）/ 1x1，逗号分隔")
+    ap.add_argument("--cover-layouts", default="bottom",
+                    help="封面版式：bottom（大字压底）/ top（压顶）/ center，逗号分隔")
+    ap.add_argument("--cover-big", default="", help="封面大字（不填则自动从标题文案里提炼）")
+    ap.add_argument("--cover-small", default="", help="封面小字")
     a = ap.parse_args()
 
     jid = a.out or ("cli_" + time.strftime("%m%d_%H%M%S"))
@@ -542,6 +592,14 @@ def main():
         "titles": [t for t in a.titles.split("|") if t.strip()],
         "imagePos": a.image_pos,
         "images": not a.no_images,
+        "pip": a.pip,
+        "zoom": a.zoom,
+        "pipR": a.pip_r,
+        "covers": not a.no_covers,
+        "ratios": [r.strip() for r in a.cover_ratios.split(",") if r.strip()],
+        "layouts": [l.strip() for l in a.cover_layouts.split(",") if l.strip()],
+        "big": a.cover_big,
+        "small": a.cover_small,
     }
     (job_dir / "job.json").write_text(
         json.dumps(opts, ensure_ascii=False, indent=2), encoding="utf-8")

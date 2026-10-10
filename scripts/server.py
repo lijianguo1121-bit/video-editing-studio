@@ -240,9 +240,15 @@ class Handler(BaseHTTPRequestHandler):
             jp = job_dir / "job.json"
             st["job"] = json.loads(jp.read_text(encoding="utf-8")) if jp.exists() else {}
             if st.get("state") == "done":
-                st["outputs"] = [dict(o, url="/api/jobs/%s/view/%s" % (m.group(1), o["file"]),
-                                      download="/api/jobs/%s/get/%s" % (m.group(1), o["file"]))
-                                 for o in st.get("outputs", [])]
+                outs = []
+                for o in st.get("outputs", []):
+                    o = dict(o, url="/api/jobs/%s/view/%s" % (m.group(1), o["file"]),
+                             download="/api/jobs/%s/get/%s" % (m.group(1), o["file"]))
+                    o["covers"] = [dict(c, url="/api/jobs/%s/view/%s" % (m.group(1), c["file"]),
+                                        download="/api/jobs/%s/get/%s" % (m.group(1), c["file"]))
+                                   for c in (o.get("covers") or [])]
+                    outs.append(o)
+                st["outputs"] = outs
             else:
                 st["queuedAhead"] = QUEUE.qsize()
             return self.json(st)
@@ -326,6 +332,14 @@ class Handler(BaseHTTPRequestHandler):
                 "imagePos": req.get("imagePos", "auto"),
                 "images": bool(req.get("images", True)),
                 "imageOpacity": req.get("imageOpacity", 0.88),
+                "pip": req.get("pip", "auto"),
+                "zoom": float(req.get("zoom", 0.075) or 0),
+                "pipR": int(req.get("pipR", 150) or 150),
+                "covers": bool(req.get("covers", True)),
+                "ratios": req.get("coverRatios") or ["3x4", "9x16"],
+                "layouts": req.get("coverLayouts") or ["bottom"],
+                "big": req.get("coverBig", ""),
+                "small": req.get("coverSmall", ""),
             }
             (job_dir / "job.json").write_text(
                 json.dumps(opts, ensure_ascii=False, indent=2), encoding="utf-8")

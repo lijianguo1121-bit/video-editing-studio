@@ -1,7 +1,7 @@
 # video-editing-studio · 口播短视频自动剪辑工作台
 
-> 拖一段口播视频进来 → 勾一个模板序号 → 出来一条带动效、配乐、配图、字幕的成片。
-> **口播原声与口型一个字都不变。**
+> 拖一段口播视频进来 → 勾一个模板序号 → 出来一条带动效、配乐、配图、字幕的成片，
+> 外加一张抖音爆款封面图。**口播原声与口型一个字都不变。**
 
 ![工作台](docs/workbench_top.jpg)
 
@@ -30,6 +30,11 @@
 - **20 套动效模板**：CRT 复古终端 / 财经研报 / 电商大字报 / 流体玻璃拟态 / 工程蓝图 …… 见下方清单
 - **自动分节拍**：填了口播稿就按标点切句，没填就按时长均分
 - **自动配图**：30 秒 3-5 张、60 秒 6-10 张，按文案主题取材，带 Ken Burns 缓动与淡入淡出
+- **运镜**：主画面缓慢推近 / 拉回，幅度可调也可关
+- **圆圈画中画**：讲完一段后**主画面缩成一个小圆圈、背景换成配图**（博主模板里最常见的那个），
+  落点跟着人脸走，圆圈半径恒不超过缩略画面的内切圆，永不漏黑底
+- **自动出封面**：截成片首帧 + 从标题文案里提炼**一行大字 + 一行小字**，抖音爆款版式（3:4 / 9:16），
+  并附一份给 OpenAI Image / 香蕉用的底图重画提示词
 - **专属 BGM**：每套模板一条独立配乐（NumPy 从零合成，无版权问题），人声出现时自动退让
 - **一键出多版**：多选模板序号 = 一条视频出多条不同风格成片
 - **自带质检**：成片与原片做音频包络互相关，低于 0.9 直接说明原声被动了
@@ -76,7 +81,28 @@ python3 pipeline.py --input=某视频.mp4 --styles=news \
 
 # 调版式用单帧预览，几秒出图，不用等整片
 python3 preview.py --job=我的任务 --styles=glass --times=4.6,10.6,16.2 --pos=tr
+python3 preview.py --job=我的任务 --styles=glass --pip=off --zoom=0    # 关运镜与圆圈
+
+# 运镜与圆圈画中画（主画面缩成小圆圈、背景换配图）
+python3 pipeline.py --input=某视频.mp4 --styles=glass --pip=all --zoom=0.11 --pip-r=172
+python3 pipeline.py --input=某视频.mp4 --styles=glass --pip=off --zoom=0   # 不要运镜
 ```
+
+`--pip=auto`（默认）隔一个配图节拍做一次圆圈，且开场 1.5s 内不做、圆圈总时长不超过全片 45%。
+`--zoom` 默认 `0.075`（放大 7.5%），`--pip-r` 默认 `150`；整链用 `--no-covers` 可以不出封面。
+
+### 封面图（也可以单独重出，不动成片）
+
+```bash
+python3 cover.py --job=我的任务 --styles=glass                    # 3:4 + 9:16
+python3 cover.py --job=我的任务 --styles=glass --layouts=bottom,top
+python3 cover.py --job=我的任务 --styles=glass --big="3步搞定获客" --small="AI 替你干活"
+python3 cover.py --job=我的任务 --styles=glass --no-kicker         # 只留一行大字一行小字
+```
+
+封面文案是**规则提炼**出来的：正文（拆解 / 方案 / 行动）比片头片尾的过场句得分高，
+带数字和力度词（免费 / 揭秘 / 成本 / AI…）再加分，配图用的空镜描述永远只当兜底。
+想改字改色直接打开 `covers/cover.html`（双击即可，改的就是 `covers/cover_cfg.js`）。
 
 ## 20 套模板
 
@@ -112,12 +138,15 @@ video-editing-studio/
 │   ├── server.py               网页工作台服务（纯标准库）
 │   ├── pipeline.py             一键流水线
 │   ├── autobeat.py             自动分节拍 + 配图张数规划
+│   ├── camera.py               运镜 + 圆圈画中画（关键帧 → ffmpeg 表达式 / 浏览器计划）
+│   ├── cover.py                抖音爆款封面（首帧 + 文案提炼 + 排版截图）
 │   ├── music_gen.py            20 套模板的配乐合成器
 │   ├── preview.py              单帧预览（调版式用）
 │   ├── doctor.py               环境自检
 │   └── build_assets.py         素材压缩（开发用）
 ├── assets/
-│   ├── gallery.html            全部模板的 CSS 皮肤 + 绘制函数 + 配图层
+│   ├── gallery.html            全部模板的 CSS 皮肤 + 绘制函数 + 配图层 + B-roll 挖洞
+│   ├── cover.html              封面版式页（可单独打开手改）
 │   ├── templates.json          唯一可编辑的配置源
 │   ├── templates.js            由 json 生成的浏览器版本
 │   ├── web/index.html          上传选号前端
@@ -153,7 +182,11 @@ git clone <this-repo> ~/.workbuddy/skills/video-editing-studio
 
 - 逐帧渲染是 CPU 密集的：20 秒视频一套模板约 1-2 分钟，60 秒约 4-6 分钟。任务串行排队，不建议并行。
 - 配图落点已逐套校准（避开标题卡、底部信息条与人脸，稳定落在画面四角）；换了模板或改了版式后若发现挤到内容，用 `--image-pos` 或改该套的 `imageLayer.xy` 微调。
-- 无头浏览器不渲染 emoji，模板文案一律用纯文字。
+- 运镜与圆圈画中画是在**原片上做缩放与位移**，不是重新生成画面；圆圈里露出的仍是原片（跟着人脸锚点）。
+  锚点靠肤色掩膜估出来的，人脸不在画面上中位置时会退回默认点，用 `--pip=off` 可整体关掉。
+- 封面文案是**规则提炼**，不会替你无中生有写钩子。想要更狠的标题就用 `--big/--small` 手填，
+  或走 `covers/ai_prompts.json` 让 OpenAI Image / 香蕉重画底图。
+- 无头浏览器不渲染 emoji，模板与封面文案一律用纯文字。
 - 只做"整片包装"，不做真正的剪辑点合并（把多个片段剪成一条）。
 
 ## 安全说明

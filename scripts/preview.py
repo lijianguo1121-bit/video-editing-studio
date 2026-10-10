@@ -22,6 +22,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import paths                                          # noqa: E402
+import camera as cam_mod                              # noqa: E402
 from pipeline import GRADE, STYLE_GRADE, VARIANTS     # noqa: E402
 
 PROJECT = paths.ASSETS
@@ -97,8 +98,31 @@ async def shoot(page_path, style, t, png_out):
         await browser.close()
 
 
-def composite(base, png, style, t, out, scale="540:960"):
+def composite(base, png, style, t, out, scale="540:960", cam_plan=None, tmp=None):
+    """把动效层叠到底片的第 t 秒上。带运镜时走和成片一模一样的那条链。"""
     grade = GRADE[STYLE_GRADE.get(style, "warm")]
+    if cam_plan:
+        # 先精确取出 t 时刻的那一帧，再把它当成"时间戳 = t"的单帧送进同一条运镜链
+        raw = (tmp or out.parent) / ("%s_raw.png" % out.stem)
+        subprocess.run([FFMPEG, "-hide_banner", "-loglevel", "error", "-y",
+                        "-ss", "%.3f" % max(0.0, t), "-i", str(base),
+                        "-frames:v", "1", str(raw)], check=True)
+        cam = cam_mod.filter_chain(cam_plan, grade)
+        # overlay 以主输入的时间轴为准：画布也要钉到 t，否则底片（pts=t）还没"开始"，
+        # 叠加取不到帧就会整屏全黑。成片里两条流都从 0 起，天然对齐，只有单帧对比要对齐。
+        g = ("[2:v]format=rgba[ov];"
+             "color=c=black:s=%dx%d:r=%d:d=1,setpts=PTS+%.4f/TB[cv];"
+             "[0:v]setpts=PTS+%.4f/TB,%s[vids];"
+             "[cv][vids]overlay=x='%s':y='%s':format=auto[cam];"
+             "[cam][ov]overlay=0:0,format=yuv420p,scale=%s[v]"
+             % (OUT_W, OUT_H, paths.FPS, t, t, cam["vids"], cam["xe"], cam["ye"], scale))
+        subprocess.run([FFMPEG, "-hide_banner", "-loglevel", "error", "-y",
+                        "-loop", "1", "-framerate", str(paths.FPS), "-i", str(raw),
+                        "-i", str(png), "-i", str(png),
+                        "-filter_complex", g, "-map", "[v]",
+                        "-frames:v", "1", str(out)], check=True)
+        raw.unlink(missing_ok=True)
+        return
     subprocess.run(
         [FFMPEG, "-hide_banner", "-loglevel", "error", "-y",
          "-ss", "%.3f" % t, "-i", str(base), "-i", str(png),
@@ -139,6 +163,10 @@ def main():
     ap.add_argument("--times", default="4.6,10.6,16.2")
     ap.add_argument("--pos", default="", help="临时改配图位置：ml/mr/tl/tr/bl/br/top/bottom/center")
     ap.add_argument("--size", default="", help="临时改配图尺寸，如 200x266")
+    ap.add_argument("--pip", default="", help="覆盖圆圈画中画：auto/off/all")
+    ap.add_argument("--zoom", default="", help="覆盖运镜幅度，如 0.075；0 关运镜")
+    ap.add_argument("--pip-r", default="", help="覆盖圆圈半径，如 150")
+    ap.add_argument("--no-cam", action="store_true", help="完全不看运镜（老口径）")
     a = ap.parse_args()
 
     job_dir = JOBS / a.job
@@ -151,23 +179,38 @@ def main():
 
     import json
     styles = [s.strip() for s in a.styles.split(",") if s.strip()]
+    jp = job_dir / "job.json"
+    job_opts = json.loads(jp.read_text(encoding="utf-8")) if jp.exists() else {}
     if not styles:
-        jp = job_dir / "job.json"
-        styles = json.loads(jp.read_text(encoding="utf-8"))["styles"] if jp.exists() else ["crt"]
+        styles = job_opts.get("styles") or ["crt"]
     times = [float(t) for t in a.times.split(",") if t.strip()]
     size = ([int(v) for v in a.size.lower().split("x")] if "x" in a.size.lower() else None)
+
+    copts = {"pip": a.pip or job_opts.get("pip") or "auto",
+             "zoom": float(a.zoom) if a.zoom != "" else float(job_opts.get("zoom", 0.075)),
+             "pipR": int(a.pip_r) if a.pip_r != "" else int(job_opts.get("pipR", 150))}
+    if a.no_cam:
+        copts["pip"] = "off"
+        copts["zoom"] = 0.0
+    anchor = cam_mod.estimate_anchor(job_dir / "base.mp4")
+    print("运镜锚点 %s，圆圈模式 %s，幅度 %.3f" % (anchor, copts["pip"], copts["zoom"]))
 
     tmp = job_dir / "preview_tmp"
     tmp.mkdir(exist_ok=True)
     made = []
     for sid in styles:
-        write_cfg(job_dir, style_cfg(base_cfg, job_dir, sid, a.pos, size))
+        cfg = style_cfg(base_cfg, job_dir, sid, a.pos, size)
+        st = next((s for s in (base_cfg.get("styles") or []) if s["id"] == sid), None)
+        plan = cam_mod.build_plan(float(cfg.get("duration") or 20), cfg["beats"],
+                                  cfg["images"], anchor, st, copts)
+        cfg["camera"] = cam_mod.js_plan(plan)
+        write_cfg(job_dir, cfg)
         shots = []
         for t in times:
             png = tmp / ("%s_%.2f_raw.png" % (sid, t))
             comp = job_dir / ("preview_%s_%05.2fs.png" % (sid, t))
             asyncio.run(shoot(job_dir / "gallery.html", sid, t, png))
-            composite(job_dir / "base.mp4", png, sid, t, comp, "720:1280")
+            composite(job_dir / "base.mp4", png, sid, t, comp, "720:1280", plan, tmp)
             shots.append(comp)
             made.append(comp)
             print("  %s @ %.2fs  ->  %s" % (sid, t, comp.name), flush=True)

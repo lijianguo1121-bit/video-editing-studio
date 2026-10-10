@@ -44,6 +44,12 @@ SRC_PAGE = next((p for p in (ASSETS / "gallery.html",
                              HERE / "gallery.html") if p.exists()),
                 ASSETS / "gallery.html")
 
+# 封面渲染页（抖音爆款封面版式：一行大字 + 一行小字）
+SRC_COVER = next((p for p in (ASSETS / "cover.html",
+                              HERE.parent / "cover.html",
+                              HERE / "cover.html") if p.exists()),
+                 ASSETS / "cover.html")
+
 TPL_JSON = next((p for p in (ASSETS / "templates.json",
                              HERE.parent / "templates.json",
                              HERE / "templates.json") if p.exists()),
@@ -106,6 +112,8 @@ def describe():
         "assets": str(ASSETS),
         "renderPage": str(SRC_PAGE),
         "renderPageOK": SRC_PAGE.exists(),
+        "coverPage": str(SRC_COVER),
+        "coverPageOK": SRC_COVER.exists(),
         "templates": str(TPL_JSON),
         "templatesOK": TPL_JSON.exists(),
         "web": str(WEB),

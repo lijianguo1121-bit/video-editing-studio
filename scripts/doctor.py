@@ -81,6 +81,7 @@ import json                                               # noqa: E402
 d = paths.describe()
 for key, title, must in (
     ("renderPage", "渲染页 gallery.html", True),
+    ("coverPage", "封面页 cover.html", True),
     ("templates", "模板配置 templates.json", True),
     ("web", "前端页面 web/index.html", True),
 ):
