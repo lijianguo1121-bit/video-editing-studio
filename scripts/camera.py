@@ -30,7 +30,7 @@ ANCHOR_FALLBACK = (round(W * 0.5), round(H * 0.31))
 PIP_LEAD = 0.35          # 圆圈出现前后的"收边"时长（B-roll 淡入 / 淡出）
 PIP_TR = 0.55            # 主画面缩成圆圈的时长
 PIP_R = 150              # 圆圈半径（720x1280 画布）
-PIP_REGION = 350         # 圆圈里露出原片的宽度（越小脸越大）
+PIP_REGION = 440         # 圆圈里露出原片的宽度（越小脸越大；440 大致是"整颗头 + 一点余量"）
 
 ZOOM_AMPLITUDE = 0.075   # 推近幅度
 PIP_BUDGET = 0.45        # auto 模式下，圆圈总时长最多占全片的比例

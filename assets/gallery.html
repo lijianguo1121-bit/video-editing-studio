@@ -1618,7 +1618,7 @@ function camAt(cam, t) {
   return { k: 1, x: a[0], y: a[1] };
 }
 
-function mkBroll(stage, C) {
+function mkBroll(stage, C, host) {
   const cam = C.camera;
   if (!cam || !Array.isArray(cam.pips) || !cam.pips.length) return null;
   const wrap = el('div', 'g-broll');
@@ -1635,7 +1635,9 @@ function mkBroll(stage, C) {
   const ring = el('div', 'g-pipring');
   stage.insertBefore(wrap, stage.firstChild);      /* 压在模板层下面 */
   stage.appendChild(ring);                        /* 圆环在模板层上面 */
-  return { wrap: wrap, items: items, ring: ring, cam: cam, lastMask: '' };
+  /* host = 模板层。它铺在 B-roll 上面，自己也可能有近乎不透明的面板压在圆圈位置，
+     所以同一个圆洞要开在它身上，主画面才能从洞里透出来。 */
+  return { wrap: wrap, items: items, ring: ring, cam: cam, host: host || null, lastMask: '' };
 }
 
 function drawBroll(B, t) {
@@ -1687,6 +1689,8 @@ function drawBroll(B, t) {
     if (B.wrap.style.display !== 'none') {
       B.wrap.style.display = 'none';
       B.ring.style.opacity = 0;
+      if (B.host) B.host.style.maskImage = B.host.style.webkitMaskImage = 'none';
+      B.lastMask = '';
     }
     return;
   }
@@ -1700,6 +1704,10 @@ function drawBroll(B, t) {
     B.lastMask = mask;
     B.wrap.style.maskImage = mask;
     B.wrap.style.webkitMaskImage = mask;
+    if (B.host) {                       /* 模板层开同一个洞 */
+      B.host.style.maskImage = mask;
+      B.host.style.webkitMaskImage = mask;
+    }
   }
   B.ring.style.opacity = ringOp.toFixed(3);
   B.ring.style.width = (hole * 2).toFixed(1) + 'px';
@@ -1719,7 +1727,7 @@ function boot() {
   T.host = layer;
   T.build(layer, CFG);
   /* B-roll 必须压在模板层下面，所以先建它；圆环再单独挂到最上面一层 */
-  const BR = mkBroll(stage, CFG);
+  const BR = mkBroll(stage, CFG, T.host);
   const IMG = mkImgLayer(stage, CFG);
   window.render = function (t) {
     T.draw(t, CFG);

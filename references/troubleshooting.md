@@ -94,6 +94,8 @@ python3 preview.py --job=我的任务 --styles=promo --size=150x200  # 卡片再
 | `Undefined constant or missing '('` | `pad` 的 `x/y` 不支持时间变量 `t`。位置要交给 `overlay` 的 `x/y`。 |
 | `Invalid argument` 且表达式很长 | 单条表达式超过约 2000 字符。减少段数，或把缓动 `if()` 换成 `max(0,min(...,1))` 线性段。 |
 | 圆圈里是黑底不是人脸 | 洞半径超过了缩略画面的内切圆（`inset*k*0.995`）。检查人脸锚点是否估错（`estimate_anchor` 会把结果打进日志）。 |
+| 圆圈里的脸发蓝 / 被糊住 | 模板层自己有近乎不透明的面板压在那个角上。现在 `mkBroll` 会在模板层上开同一个洞；如果还糊，就是该套模板在这个位置真的不适合，换个圆圈落点（改 `imageLayer.xy`）或换一套模板。 |
+| 圆圈上压着一张配图小卡 | 圆圈圆心就是从配图落点算出来的，两者天然重叠。配图层现在跟着 B-roll 浓度淡出；若仍有，检查 `drawBroll` 是否在写 `window.__BROLLOP`。 |
 | 圆圈太密 / 一开场就是圆圈 | `auto` 的纪律是「开场 1.5s 内不做 + 总时长 ≤ 45%」。想更密用 `--pip=all`；想全关 `--pip=off --zoom=0`。 |
 | 动效层整个不见了（单帧对比时） | 动效 PNG 只有一帧（pts=0），别给它加 `eof_action=pass`，会被判成已 EOF。用默认的 `repeat`。 |
 
