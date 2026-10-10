@@ -334,6 +334,7 @@ class Handler(BaseHTTPRequestHandler):
                 "imageOpacity": req.get("imageOpacity", 0.88),
                 "pip": req.get("pip", "auto"),
                 "zoom": float(req.get("zoom", 0.075) or 0),
+                "zooms": int(req.get("zooms", 1) or 0),
                 "pipR": int(req.get("pipR", 150) or 150),
                 "covers": bool(req.get("covers", True)),
                 "ratios": req.get("coverRatios") or ["3x4", "9x16"],

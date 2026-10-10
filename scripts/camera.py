@@ -30,9 +30,12 @@ ANCHOR_FALLBACK = (round(W * 0.5), round(H * 0.31))
 PIP_LEAD = 0.35          # 圆圈出现前后的"收边"时长（B-roll 淡入 / 淡出）
 PIP_TR = 0.55            # 主画面缩成圆圈的时长
 PIP_R = 150              # 圆圈半径（720x1280 画布）
-PIP_REGION = 440         # 圆圈里露出原片的宽度（越小脸越大；440 大致是"整颗头 + 一点余量"）
+PIP_REGION = 600         # 圆圈里露出原片的宽度（越小脸越大；600 ≈ 头 + 肩，留足余量）
 
 ZOOM_AMPLITUDE = 0.075   # 推近幅度
+ZOOM_TIMES = 1           # 整片做几次「推近 → 拉回」。圆圈本身已经在缩放，默认就一次
+ZOOM_MIN_SPAN = 2.5      # 一段区间短于这个秒数就不在里面做推拉了（来不及，反而像抖）
+ZOOM_SAME_SPAN = 1.0     # 区间长度差在这个秒数以内算"差不多长"，此时优先靠前的
 PIP_BUDGET = 0.45        # auto 模式下，圆圈总时长最多占全片的比例
 PIP_OPEN_SKIP = 1.5      # 片头这么多秒内不做圆圈（先让人物出镜）
 
@@ -139,11 +142,13 @@ def build_plan(duration, beats, images, anchor, style_cfg=None, opts=None):
     opts:
       pip   : auto | off | all     哪些配图节拍做成圆圈画中画
       zoom  : 推近幅度，0 表示不要运镜
+      zooms : 整片做几次「推近 → 拉回」，默认 1 次
       pipR  : 圆圈半径
     """
     opts = opts or {}
     mode = (opts.get("pip") or "auto").lower()
     amp = float(opts.get("zoom", ZOOM_AMPLITUDE))
+    zooms = int(opts.get("zooms", ZOOM_TIMES))
     r = int(opts.get("pipR", PIP_R))
     ax, ay = anchor
 
@@ -188,11 +193,55 @@ def build_plan(duration, beats, images, anchor, style_cfg=None, opts=None):
 
     segs = []
     k, x, y = 1.0, ax, ay
-    zi = 0
+
+    # ---- 运镜节奏：整片只做极少次「推近 → 拉回」（默认就一次）------------------
+    # 每一次都放在最长的一段"没有圆圈"的连续区间里，对半切开：前半推近、后半拉回。
+    # 圆圈本身已经在放大缩小了，再叠加高频推拉会让人晕。
+    runs, cur = [], []
+    for bi, b in enumerate(beats):
+        if float(b["t1"]) - float(b["t0"]) < 0.5:
+            continue
+        if bi in pip_by_beat:
+            if cur:
+                runs.append(cur)
+                cur = []
+        else:
+            cur.append(bi)
+    if cur:
+        runs.append(cur)
+
+    def _run_span(run):
+        return float(beats[run[0]]["t0"]), float(beats[run[-1]]["t1"])
+
+    zoom_runs = {}
+    if amp > 0.001 and zooms > 0:
+        usable = [r for r in runs if _run_span(r)[1] - _run_span(r)[0] >= ZOOM_MIN_SPAN]
+        # 挑最长的几段；长度差不多时优先靠前的——推拉放在片尾会显得突兀
+        usable.sort(key=lambda r: (_run_span(r)[1] - _run_span(r)[0]) / ZOOM_SAME_SPAN,
+                    reverse=True)
+        if usable:
+            best_span = _run_span(usable[0])[1] - _run_span(usable[0])[0]
+            near = [r for r in usable
+                    if _run_span(r)[1] - _run_span(r)[0] >= best_span - ZOOM_SAME_SPAN]
+            near.sort(key=lambda r: _run_span(r)[0])
+            for run in near[:zooms]:
+                zoom_runs[run[0]] = (_run_span(run), run[-1])
+
     for bi, b in enumerate(beats):
         t0, t1 = float(b["t0"]), float(b["t1"])
         if t1 - t0 < 0.5:
             continue
+        if bi in zoom_runs:                          # 这一段整段做一次推近 + 拉回
+            (ta, tb), last = zoom_runs[bi]
+            tm = (ta + tb) / 2.0
+            segs.append({"t0": ta, "t1": tm, "k0": k, "k1": 1.0 + amp,
+                         "x0": x, "y0": y, "x1": ax, "y1": ay, "ease": "smooth"})
+            segs.append({"t0": tm, "t1": tb, "k0": 1.0 + amp, "k1": 1.0,
+                         "x0": ax, "y0": ay, "x1": ax, "y1": ay, "ease": "smooth"})
+            k, x, y = 1.0, ax, ay
+            continue
+        if any(bi <= last and bi >= start for start, (_, last) in zoom_runs.items()):
+            continue                                 # 这段的余下节拍已经被合并处理了
         pip = pip_by_beat.get(bi)
         if pip:
             tr = min(PIP_TR, max(0.3, (t1 - t0) / 3.0))
@@ -208,14 +257,9 @@ def build_plan(duration, beats, images, anchor, style_cfg=None, opts=None):
                          "x0": px, "y0": py, "x1": ax, "y1": ay, "ease": "smooth"})
             pip["tr"] = tr
             k, x, y = 1.0, ax, ay
-        elif amp > 0.001:
-            # 在"没有圆圈"的段之间交替推近 / 拉回，节奏才不会被圆圈打乱
-            zi += 1
-            target = 1.0 + amp if (zi % 2 == 1) else 1.0
-            segs.append({"t0": t0, "t1": t1, "k0": k, "k1": target,
-                         "x0": x, "y0": y, "x1": ax, "y1": ay,
-                         "ease": "smooth" if abs(target - k) > 0.001 else "linear"})
-            k, x, y = target, ax, ay
+        else:
+            segs.append({"t0": t0, "t1": t1, "k0": k, "k1": k,       # 保持不动
+                         "x0": x, "y0": y, "x1": x, "y1": y, "ease": "linear"})
 
     if not segs:
         segs = [{"t0": 0.0, "t1": duration, "k0": 1.0, "k1": 1.0,

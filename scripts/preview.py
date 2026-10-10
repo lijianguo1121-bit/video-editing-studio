@@ -165,6 +165,7 @@ def main():
     ap.add_argument("--size", default="", help="临时改配图尺寸，如 200x266")
     ap.add_argument("--pip", default="", help="覆盖圆圈画中画：auto/off/all")
     ap.add_argument("--zoom", default="", help="覆盖运镜幅度，如 0.075；0 关运镜")
+    ap.add_argument("--zooms", default="", help="覆盖运镜次数，如 1；0 表示不做推拉")
     ap.add_argument("--pip-r", default="", help="覆盖圆圈半径，如 150")
     ap.add_argument("--no-cam", action="store_true", help="完全不看运镜（老口径）")
     a = ap.parse_args()
@@ -188,12 +189,15 @@ def main():
 
     copts = {"pip": a.pip or job_opts.get("pip") or "auto",
              "zoom": float(a.zoom) if a.zoom != "" else float(job_opts.get("zoom", 0.075)),
+             "zooms": int(a.zooms) if a.zooms != "" else int(job_opts.get("zooms", 1)),
              "pipR": int(a.pip_r) if a.pip_r != "" else int(job_opts.get("pipR", 150))}
     if a.no_cam:
         copts["pip"] = "off"
         copts["zoom"] = 0.0
+        copts["zooms"] = 0
     anchor = cam_mod.estimate_anchor(job_dir / "base.mp4")
-    print("运镜锚点 %s，圆圈模式 %s，幅度 %.3f" % (anchor, copts["pip"], copts["zoom"]))
+    print("运镜锚点 %s，圆圈模式 %s，幅度 %.3f，推拉 %d 次"
+          % (anchor, copts["pip"], copts["zoom"], copts["zooms"]))
 
     tmp = job_dir / "preview_tmp"
     tmp.mkdir(exist_ok=True)

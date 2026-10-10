@@ -570,6 +570,8 @@ def main():
                     help="圆圈画中画：auto 隔一个配图节拍做一次 / off 关 / all 全做")
     ap.add_argument("--zoom", type=float, default=0.075,
                     help="运镜的推近幅度（0.075 = 放大 7.5%%），0 关闭运镜")
+    ap.add_argument("--zooms", type=int, default=1,
+                    help="整片做几次「推近 → 拉回」，默认 1 次（圆圈本身已在缩放，多了会晕）")
     ap.add_argument("--pip-r", type=int, default=150, help="圆圈半径（720x1280 画布）")
     ap.add_argument("--no-covers", action="store_true", help="不出封面图")
     ap.add_argument("--cover-ratios", default="3x4,9x16",
@@ -594,6 +596,7 @@ def main():
         "images": not a.no_images,
         "pip": a.pip,
         "zoom": a.zoom,
+        "zooms": a.zooms,
         "pipR": a.pip_r,
         "covers": not a.no_covers,
         "ratios": [r.strip() for r in a.cover_ratios.split(",") if r.strip()],

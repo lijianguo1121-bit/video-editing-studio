@@ -85,11 +85,14 @@ python3 preview.py --job=我的任务 --styles=glass --pip=off --zoom=0    # 关
 
 # 运镜与圆圈画中画（主画面缩成小圆圈、背景换配图）
 python3 pipeline.py --input=某视频.mp4 --styles=glass --pip=all --zoom=0.11 --pip-r=172
+python3 pipeline.py --input=某视频.mp4 --styles=glass --zooms=2            # 整片推拉 2 次
 python3 pipeline.py --input=某视频.mp4 --styles=glass --pip=off --zoom=0   # 不要运镜
 ```
 
 `--pip=auto`（默认）隔一个配图节拍做一次圆圈，且开场 1.5s 内不做、圆圈总时长不超过全片 45%。
-`--zoom` 默认 `0.075`（放大 7.5%），`--pip-r` 默认 `150`；整链用 `--no-covers` 可以不出封面。
+**推拉运镜整片只做一次**（`--zooms`，默认 1），放在最长的一段空档里对半切开——前半推近、后半拉回；
+圆圈本身已经在缩放，推拉一多就晕。`--zoom` 默认 `0.075`（放大 7.5%），`--pip-r` 默认 `150`；
+整链用 `--no-covers` 可以不出封面。
 
 ### 封面图（也可以单独重出，不动成片）
 
