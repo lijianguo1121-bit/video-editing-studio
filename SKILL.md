@@ -44,6 +44,35 @@ python3 server.py --open       # 2) 起工作台，浏览器自动打开 http://
 
 `<skill>` 就是本 skill 所在目录（`~/.workbuddy/skills/video-editing-studio`）。
 
+## 部署到云服务器（阿里云 ECS 等）
+
+想让手机 / 公司电脑也能用，把工作台装到一台公网服务器：
+
+```bash
+git clone https://github.com/lijianguo1121-bit/video-editing-studio.git /tmp/vs
+cd /tmp/vs && sudo STUDIO_PASS='你的访问密码' bash deploy/install.sh
+```
+
+脚本自动装依赖（含**中文字体**，没它中文全变方框）、建专用用户 `vstudio`、
+装无头 Chromium、注册 systemd、放行本机防火墙，最后打印访问地址。
+可重复执行 = 更新代码 + 重启服务。完整说明见 `deploy/README.md`。
+
+三步别忘了：**① 阿里云控制台放行安全组 TCP 8760；② 机器 2 核 4G 起；
+③ 没设 `STUDIO_PASS` 时服务拒绝监听公网**（见下）。
+
+### 访问口令
+
+| 场景 | 怎么做 |
+|---|---|
+| 本机用 | 什么都不用设，默认只监听 `127.0.0.1` |
+| 开公网 | **必须**设 `STUDIO_PASS`，所有请求要走 HTTP Basic 认证 |
+| 忘设了还想开公网 | 会被直接拒绝启动（防止"以为在本地、其实全网可访问"） |
+
+```bash
+STUDIO_PASS='你的密码' python3 server.py --host=0.0.0.0 --port=8760
+# 用户名默认 admin，可用 STUDIO_USER 改
+```
+
 ## 网页工作台（主要交付形态）
 
 - 视频**拖拽上传**，落地即探测时长/分辨率/有无音轨。

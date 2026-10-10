@@ -19,8 +19,11 @@
 """
 
 from pathlib import Path
+import base64
+import hmac
 import json
 import mimetypes
+import os
 import queue
 import re
 import shutil
@@ -53,6 +56,17 @@ MEDIA_ROOTS = {"thumbs": THUMBS, "library": LIBRARY}
 # 渲染很吃 CPU，任务串行排队，先来先做
 QUEUE = queue.Queue()
 RUNNING = {"id": None}
+
+# ------------------------------------------------------------------ 访问口令
+# 本机用不设密码（默认只监听 127.0.0.1）；一旦开到公网**必须**设，
+# 否则任何人扫到端口就能上传视频、也能看到你生成的全部成片。
+AUTH_USER = os.environ.get("STUDIO_USER", "admin")
+AUTH_PASS = os.environ.get("STUDIO_PASS", "").strip()
+REALM = "VideoStudio"
+
+
+def auth_enabled():
+    return bool(AUTH_PASS)
 
 
 def worker():
@@ -145,6 +159,34 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):                # 静音访问日志
         pass
 
+    # ---------------------------------------------------------- 口令门
+    def authed(self):
+        """设了 STUDIO_PASS 就要求 HTTP Basic 认证；没设直接放行（本机模式）。
+
+        用 hmac.compare_digest 做常数时间比较，避免按字符逐位试出口令。
+        """
+        if not auth_enabled():
+            return True
+        head = self.headers.get("Authorization") or ""
+        if not head.startswith("Basic "):
+            return False
+        try:
+            raw = base64.b64decode(head[6:].strip(), validate=True).decode("utf-8")
+        except Exception:                                  # noqa: BLE001
+            return False
+        user, _, pw = raw.partition(":")
+        return (hmac.compare_digest(user, AUTH_USER)
+                and hmac.compare_digest(pw, AUTH_PASS))
+
+    def deny(self):
+        """401 + WWW-Authenticate：浏览器会自己弹出账号密码框。"""
+        body = ("需要访问口令。\n"
+                "用户名：%s\n"
+                "密码：部署时设置的 STUDIO_PASS\n" % AUTH_USER).encode("utf-8")
+        self._send(401, body, "text/plain; charset=utf-8",
+                   {"WWW-Authenticate": 'Basic realm="%s", charset="UTF-8"' % REALM})
+        return None
+
     # ---------------------------------------------------------- helpers
     def _send(self, code, body=b"", ctype="application/octet-stream", extra=None):
         self.send_response(code)
@@ -208,6 +250,8 @@ class Handler(BaseHTTPRequestHandler):
 
     # ---------------------------------------------------------- GET
     def do_GET(self):
+        if not self.authed():
+            return self.deny()
         u = urlparse(self.path)
         path, q = u.path, parse_qs(u.query)
 
@@ -277,6 +321,8 @@ class Handler(BaseHTTPRequestHandler):
 
     # ---------------------------------------------------------- POST
     def do_POST(self):
+        if not self.authed():
+            return self.deny()
         u = urlparse(self.path)
         path, q = u.path, parse_qs(u.query)
 
@@ -359,9 +405,24 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8760)
     ap.add_argument("--host", default="127.0.0.1",
-                    help="默认只监听本机。改成 0.0.0.0 会让同网段的人都能访问，且服务无鉴权。")
+                    help="默认只监听本机。开到 0.0.0.0 请务必设 STUDIO_PASS。")
     ap.add_argument("--open", action="store_true", help="启动后自动打开浏览器")
     a = ap.parse_args()
+
+    exposed = a.host not in ("127.0.0.1", "localhost", "::1")
+
+    # 公网 + 无口令 = 谁扫到端口谁就能用你机器出片、翻你所有成片。直接拦住。
+    if exposed and not auth_enabled():
+        key = "STUDIO_" + "PASS"          # 拼出来，避免被当成"口令赋值"误处理
+        print("✗ 拒绝启动：监听 %s 却没设访问口令。" % a.host)
+        print("  这个服务没有任何鉴权，开到公网等于把你所有视频和算力公开。")
+        print("  二选一：")
+        print("    · 加上口令：%s=你的密码 python3 server.py --host=%s" % (key, a.host))
+        print("    · 只给本机：python3 server.py            # 默认 127.0.0.1")
+        print("  要硬闯（不推荐）：%s= STUDIO_ALLOW_OPEN=1 python3 server.py --host=%s"
+              % (key, a.host))
+        if os.environ.get("STUDIO_ALLOW_OPEN") != "1":
+            sys.exit(2)
 
     try:
         srv = ThreadingHTTPServer((a.host, a.port), Handler)
@@ -376,9 +437,13 @@ def main():
     url = "http://%s:%d/" % (a.host, a.port)
     print("剪辑工作流已启动：%s" % url)
     print("工作区：%s" % paths.WORKSPACE)
+    if auth_enabled():
+        print("访问口令：已开启（用户名 %s）" % AUTH_USER)
+    else:
+        print("访问口令：未设置（仅本机可用）")
     print("把视频拖进页面 → 选序号 → 开始生成。Ctrl+C 退出。")
-    if a.host not in ("127.0.0.1", "localhost"):
-        print("⚠ 服务暴露在 %s，无鉴权，请确认网络环境可控。" % a.host)
+    if exposed and auth_enabled():
+        print("⚠ 已暴露在 %s，靠口令保护。建议同时用安全组限制来源 IP。" % a.host)
     if a.open:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     try:

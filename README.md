@@ -159,6 +159,9 @@ video-editing-studio/
 │   ├── templates.md            模板系统与扩展方法
 │   ├── architecture.md         渲染/音频管线设计
 │   └── troubleshooting.md      排错手册
+├── deploy/
+│   ├── install.sh              云服务器一键部署（Ubuntu/Debian/阿里云 Linux）
+│   └── README.md               机器选型 / 安全组放行 / 运维 / 排错
 └── docs/                       README 配图
 ```
 
@@ -196,14 +199,36 @@ git clone <this-repo> ~/.workbuddy/skills/video-editing-studio
 
 - **全本地运行**：不上传任何素材到外部服务，不调用任何云端 API。
   唯一的网络动作是前后端在 `127.0.0.1` 上的本地通信。
-- **服务默认只监听本机** `127.0.0.1:8760`。`--host` 改成 `0.0.0.0` 会让**同一个局域网内
-  任何人都能访问你的工作台和成片**，且服务本身没有鉴权——非必要别改。
+- **服务默认只监听本机** `127.0.0.1:8760`。
+- **带访问口令**：设了 `STUDIO_PASS` 之后所有请求都要 HTTP Basic 认证，
+  没口令连首页都打不开（口令用常数时间比较，防逐位试探）。
+  **没设口令时不允许监听公网**——`--host=0.0.0.0` 而没设口令会直接拒绝启动，
+  避免"以为在本地、其实全网可访问"。
 - **路径穿越已拦截**：所有静态文件请求都经过 `safe_child()` 限制在各自根目录内
   （`/media/library/../../..` 这类请求返回 404）。
 - **子进程只调用本机二进制**：`ffmpeg`（来自 `imageio-ffmpeg`）与 Playwright 自带的
   Chromium，命令参数是列表形式、不经 shell，不接受远程输入。
 - **删除操作只作用于自己的工作区**：中间文件（`frames/*.mov`、`preview_tmp/`）
   在 `~/VideoStudio` 内创建和清理，不触碰工作区之外的任何文件。
+
+## 部署到云服务器（阿里云 ECS）
+
+想摆脱本机、用手机或公司电脑出片，可以装到一台公网服务器上：
+
+```bash
+git clone https://github.com/lijianguo1121-bit/video-editing-studio.git /tmp/vs
+cd /tmp/vs
+sudo STUDIO_PASS='你的访问密码' bash deploy/install.sh
+```
+
+脚本自动装依赖（含**中文字体**，没它中文全是方框）、建专用用户、装无头 Chromium、
+注册 systemd 服务、放行本机防火墙，最后打印访问地址。可重复执行 = 更新 + 重启。
+
+**还要在阿里云控制台放行安全组**（否则外网打不开）：
+ECS → 安全组 → 配置规则 → 入方向 → 放行 TCP `8760`。
+
+机器建议 **2 核 4G 起**（渲染是 CPU 密集，不需要 GPU，2 核机器上 20s 视频约 3-6 分钟）。
+完整步骤、手动安装、排错表见 [`deploy/README.md`](deploy/README.md)。
 
 ## License
 
