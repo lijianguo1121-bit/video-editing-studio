@@ -1587,7 +1587,11 @@ function drawImgLayer(L, t) {
     c.style.display = 'block';
     const sc = 1.02 + 0.07 * local;
     const dy = (0.5 - local) * 10;
-    c.style.opacity = (o * base).toFixed(3);
+    /* 圆圈画中画期间 B-roll 已经在铺图了，卡片和圆圈用的是同一个落点，
+       会正好压在圆圈上把脸挡住 —— 所以跟着 B-roll 的浓度一起淡出。 */
+    const yld = 1 - Math.min(1, window.__BROLLOP || 0);
+    if (yld <= 0.004) { c.style.display = 'none'; continue; }
+    c.style.opacity = (o * base * yld).toFixed(3);
     c.style.transform = 'translate3d(0,' + dy.toFixed(2) + 'px,0) scale(' + sc.toFixed(4) + ')';
   }
 }
@@ -1679,12 +1683,14 @@ function drawBroll(B, t) {
   }
 
   if (op <= 0.004) {
+    window.__BROLLOP = 0;
     if (B.wrap.style.display !== 'none') {
       B.wrap.style.display = 'none';
       B.ring.style.opacity = 0;
     }
     return;
   }
+  window.__BROLLOP = op;                    /* 配图层据此避让（见 drawImgLayer） */
   if (B.wrap.style.display !== 'block') B.wrap.style.display = 'block';
 
   const mask = 'radial-gradient(circle at ' + c.x.toFixed(1) + 'px ' + c.y.toFixed(1) + 'px,'
